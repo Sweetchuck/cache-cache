@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -11,6 +14,7 @@
 
 namespace Cache\Adapter\Common;
 
+use Cache\TagInterop\TaggableCacheItemInterface;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
 
 /**
@@ -21,14 +25,14 @@ interface PhpCachePool extends TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      *
-     * @return PhpCacheItem
+     * @return \Cache\Adapter\Common\PhpCacheItem
      */
-    public function getItem($key);
+    public function getItem(string $key): TaggableCacheItemInterface;
 
     /**
      * {@inheritdoc}
      *
-     * @return array|\Traversable|PhpCacheItem[]
+     * @phpstan-return \iterable<string, \Cache\Adapter\Common\PhpCacheItem>
      */
-    public function getItems(array $keys = []);
+    public function getItems(array $keys = []): iterable;
 }

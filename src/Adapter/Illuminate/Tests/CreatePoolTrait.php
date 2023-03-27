@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -16,24 +19,24 @@ use Illuminate\Cache\ArrayStore;
 
 trait CreatePoolTrait
 {
-    private $illuminateStore = null;
+    private ?ArrayStore $illuminateStore = null;
 
-    public function createCachePool()
+    public function createCachePool(): IlluminateCachePool
     {
         return new IlluminateCachePool($this->getIlluminateStore());
     }
 
-    private function getIlluminateStore()
+    public function createSimpleCache(): IlluminateCachePool
+    {
+        return $this->createCachePool();
+    }
+
+    private function getIlluminateStore(): ArrayStore
     {
         if ($this->illuminateStore === null) {
             $this->illuminateStore = new ArrayStore();
         }
 
         return $this->illuminateStore;
-    }
-
-    public function createSimpleCache()
-    {
-        return $this->createCachePool();
     }
 }

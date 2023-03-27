@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -23,7 +26,7 @@ class VoidCachePool extends AbstractCachePool implements HierarchicalPoolInterfa
     /**
      * {@inheritdoc}
      */
-    protected function fetchObjectFromCache($key)
+    protected function fetchObjectFromCache(string $key): array
     {
         return [false, null, [], null];
     }
@@ -31,7 +34,7 @@ class VoidCachePool extends AbstractCachePool implements HierarchicalPoolInterfa
     /**
      * {@inheritdoc}
      */
-    protected function clearAllObjectsFromCache()
+    protected function clearAllObjectsFromCache(): bool
     {
         return true;
     }
@@ -39,7 +42,7 @@ class VoidCachePool extends AbstractCachePool implements HierarchicalPoolInterfa
     /**
      * {@inheritdoc}
      */
-    protected function clearOneObjectFromCache($key)
+    protected function clearOneObjectFromCache(string $key): bool
     {
         return true;
     }
@@ -47,7 +50,15 @@ class VoidCachePool extends AbstractCachePool implements HierarchicalPoolInterfa
     /**
      * {@inheritdoc}
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    protected function storeItemInCache(PhpCacheItem $item, ?int $ttl): bool
+    {
+        return true;
+    }
+
+    /**
+     * @param string[] $tags
+     */
+    public function clearTags(array $tags): bool
     {
         return true;
     }
@@ -55,26 +66,30 @@ class VoidCachePool extends AbstractCachePool implements HierarchicalPoolInterfa
     /**
      * {@inheritdoc}
      */
-    public function clearTags(array $tags)
-    {
-        return true;
-    }
-
-    protected function getList($name)
+    protected function getList(string $name): array
     {
         return [];
     }
 
-    protected function removeList($name)
+    /**
+     * {@inheritdoc}
+     */
+    protected function removeList(string $name): bool
     {
         return true;
     }
 
-    protected function appendListItem($name, $key)
+    /**
+     * {@inheritdoc}
+     */
+    protected function appendListItem(string $name, string $key)
     {
     }
 
-    protected function removeListItem($name, $key)
+    /**
+     * {@inheritdoc}
+     */
+    protected function removeListItem(string $name, string $key)
     {
     }
 }

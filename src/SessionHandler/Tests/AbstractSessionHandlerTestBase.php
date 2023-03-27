@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -18,28 +21,26 @@ use PHPUnit\Framework\TestCase;
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  * @author Daniel Bannert <d.bannert@anolilab.de>
  */
-abstract class AbstractSessionHandlerTest extends TestCase
+abstract class AbstractSessionHandlerTestBase extends TestCase
 {
-    const TTL    = 100;
-    const PREFIX = 'pre';
+    public const TTL = 100;
 
-    /**
-     * @type \SessionHandlerInterface|\SessionUpdateTimestampHandlerInterface
-     */
-    protected $handler;
+    public const PREFIX = 'pre';
 
-    public function testOpen()
+    protected \SessionHandlerInterface $handler;
+
+    public function testOpen(): void
     {
-        $this->assertTrue($this->handler->open('foo', 'bar'));
+        static::assertTrue($this->handler->open('foo', 'bar'));
     }
 
-    public function testClose()
+    public function testClose(): void
     {
-        $this->assertTrue($this->handler->close());
+        static::assertTrue($this->handler->close());
     }
 
-    public function testGc()
+    public function testGc(): void
     {
-        $this->assertTrue($this->handler->gc(4711));
+        static::assertIsInt($this->handler->gc(4711));
     }
 }

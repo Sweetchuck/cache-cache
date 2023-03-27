@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -22,27 +25,30 @@ class CachePool
 {
     use HierarchicalCachePoolTrait;
 
-    private $storeValues = [];
+    /**
+     * @var string[]
+     */
+    private array $storeValues;
 
     /**
-     * @param array $storeValues
+     * @param string[] $storeValues
      */
     public function __construct(array $storeValues = [])
     {
         $this->storeValues = $storeValues;
     }
 
-    public function exposeClearHierarchyKeyCache()
+    public function exposeClearHierarchyKeyCache(): void
     {
         $this->clearHierarchyKeyCache();
     }
 
-    public function exposeGetHierarchyKey($key, &$pathKey = null)
+    public function exposeGetHierarchyKey(string $key, ?string &$pathKey = null): string
     {
         return $this->getHierarchyKey($key, $pathKey);
     }
 
-    protected function getDirectValue($key)
+    protected function getDirectValue(string $name): mixed
     {
         return array_shift($this->storeValues);
     }

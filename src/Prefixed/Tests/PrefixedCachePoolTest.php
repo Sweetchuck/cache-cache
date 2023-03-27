@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -22,132 +25,195 @@ use Psr\Cache\CacheItemPoolInterface;
 class PrefixedCachePoolTest extends TestCase
 {
     /**
-     * @return \PHPUnit_Framework_MockObject_MockObject|CacheItemPoolInterface
+     * @return \PHPUnit\Framework\MockObject\MockObject&\Psr\Cache\CacheItemPoolInterface
      */
-    private function getCacheStub()
+    private function getPoolMock()
     {
-        return $this->getMockBuilder(CacheItemPoolInterface::class)->setMethods(
-            ['getItem', 'getItems', 'hasItem', 'clear', 'deleteItem', 'deleteItems', 'save', 'saveDeferred', 'commit']
-        )->getMock();
+        return $this
+            ->getMockBuilder(CacheItemPoolInterface::class)
+            ->onlyMethods([
+                'getItem',
+                'getItems',
+                'hasItem',
+                'clear',
+                'deleteItem',
+                'deleteItems',
+                'save',
+                'saveDeferred',
+                'commit',
+            ])
+            ->getMock();
     }
 
-    public function testGetItem()
+    public function testGetItem(): void
     {
-        $prefix      = 'ns';
-        $key         = 'key';
-        $returnValue = true;
+        $prefix = 'ns';
+        $key = 'key';
+        $item = $this
+            ->getMockBuilder(CacheItemInterface::class)
+            ->getMock();
 
-        $stub = $this->getCacheStub();
-        $stub->expects($this->once())->method('getItem')->with($prefix.$key)->willReturn($returnValue);
+        $pool1 = $this->getPoolMock();
+        $pool1
+            ->expects($this->once())
+            ->method('getItem')
+            ->with($prefix.$key)
+            ->willReturn($item);
 
-        $pool = new PrefixedCachePool($stub, $prefix);
-        $this->assertEquals($returnValue, $pool->getItem($key));
+        $pool2 = new PrefixedCachePool($pool1, $prefix);
+        static::assertEquals($item, $pool2->getItem($key));
     }
 
-    public function testGetItems()
+    public function testGetItems():void
     {
-        $prefix      = 'ns';
-        $key0        = 'key0';
-        $key1        = 'key1';
-        $returnValue = true;
+        $prefix = 'ns';
+        $key0 = 'key0';
+        $key1 = 'key1';
+        $item0 = $this
+            ->getMockBuilder(CacheItemInterface::class)
+            ->getMock();
+        $item1 = $this
+            ->getMockBuilder(CacheItemInterface::class)
+            ->getMock();
 
-        $stub = $this->getCacheStub();
-        $stub->expects($this->once())->method('getItems')->with([$prefix.$key0, $prefix.$key1])->willReturn($returnValue);
+        $pool1 = $this->getPoolMock();
+        $pool1
+            ->expects($this->once())
+            ->method('getItems')
+            ->with([$prefix.$key0, $prefix.$key1])
+            ->willReturn([
+                $key0 => $item0,
+                $key1 => $item1,
+            ]);
 
-        $pool = new PrefixedCachePool($stub, $prefix);
-        $this->assertEquals($returnValue, $pool->getItems([$key0, $key1]));
+        $pool2 = new PrefixedCachePool($pool1, $prefix);
+        $actual = $pool2->getItems([$key0, $key1]);
+        static::assertEquals(
+            [
+                $key0,
+                $key1,
+            ],
+            array_keys($actual),
+        );
     }
 
-    public function testHasItem()
+    public function testHasItem(): void
     {
-        $prefix      = 'ns';
-        $key         = 'key';
+        $prefix = 'ns';
+        $key = 'key';
         $returnValue = true;
 
-        $stub = $this->getCacheStub();
-        $stub->expects($this->once())->method('hasItem')->with($prefix.$key)->willReturn($returnValue);
+        $stub = $this->getPoolMock();
+        $stub
+            ->expects($this->once())
+            ->method('hasItem')
+            ->with($prefix.$key)
+            ->willReturn($returnValue);
 
         $pool = new PrefixedCachePool($stub, $prefix);
-        $this->assertEquals($returnValue, $pool->hasItem($key));
+        static::assertEquals($returnValue, $pool->hasItem($key));
     }
 
-    public function testClear()
+    public function testClear(): void
     {
-        $prefix      = 'ns';
-        $key         = 'key';
+        $prefix = 'ns';
         $returnValue = true;
 
-        $stub = $this->getCacheStub();
-        $stub->expects($this->once())->method('clear')->willReturn($returnValue);
+        $stub = $this->getPoolMock();
+        $stub
+            ->expects($this->once())
+            ->method('clear')
+            ->willReturn($returnValue);
 
         $pool = new PrefixedCachePool($stub, $prefix);
-        $this->assertEquals($returnValue, $pool->clear());
+        static::assertEquals($returnValue, $pool->clear());
     }
 
-    public function testDeleteItem()
+    public function testDeleteItem(): void
     {
-        $prefix      = 'ns';
-        $key         = 'key';
+        $prefix = 'ns';
+        $key = 'key';
         $returnValue = true;
 
-        $stub = $this->getCacheStub();
-        $stub->expects($this->once())->method('deleteItem')->with($prefix.$key)->willReturn($returnValue);
+        $stub = $this->getPoolMock();
+        $stub
+            ->expects($this->once())
+            ->method('deleteItem')
+            ->with($prefix.$key)
+            ->willReturn($returnValue);
 
         $pool = new PrefixedCachePool($stub, $prefix);
-        $this->assertEquals($returnValue, $pool->deleteItem($key));
+        static::assertEquals($returnValue, $pool->deleteItem($key));
     }
 
-    public function testDeleteItems()
+    public function testDeleteItems(): void
     {
-        $prefix      = 'ns';
-        $key0        = 'key0';
-        $key1        = 'key1';
+        $prefix = 'ns';
+        $key0 = 'key0';
+        $key1 = 'key1';
         $returnValue = true;
 
-        $stub = $this->getCacheStub();
-        $stub->expects($this->once())->method('deleteItems')->with([$prefix.$key0, $prefix.$key1])->willReturn($returnValue);
+        $stub = $this->getPoolMock();
+        $stub
+            ->expects($this->once())
+            ->method('deleteItems')
+            ->with([$prefix.$key0, $prefix.$key1])
+            ->willReturn($returnValue);
 
         $pool = new PrefixedCachePool($stub, $prefix);
-        $this->assertEquals($returnValue, $pool->deleteItems([$key0, $key1]));
+        static::assertEquals($returnValue, $pool->deleteItems([$key0, $key1]));
     }
 
-    public function testSave()
+    public function testSave(): void
     {
-        /** @type CacheItemInterface $item */
-        $item        = $this->getMockBuilder(CacheItemInterface::class)->getMock();
-        $prefix      = 'ns';
+        $item = $this
+            ->getMockBuilder(CacheItemInterface::class)
+            ->getMock();
+        $prefix = 'ns';
         $returnValue = true;
 
-        $stub = $this->getCacheStub();
-        $stub->expects($this->once())->method('save')->with($item)->willReturn($returnValue);
+        $stub = $this->getPoolMock();
+        $stub
+            ->expects($this->once())
+            ->method('save')
+            ->with($item)
+            ->willReturn($returnValue);
 
         $pool = new PrefixedCachePool($stub, $prefix);
-        $this->assertEquals($returnValue, $pool->save($item));
+        static::assertEquals($returnValue, $pool->save($item));
     }
 
-    public function testSaveDeffered()
+    public function testSaveDeferred(): void
     {
-        /** @type CacheItemInterface $item */
-        $item        = $this->getMockBuilder(CacheItemInterface::class)->getMock();
-        $prefix      = 'ns';
+        $item = $this
+            ->getMockBuilder(CacheItemInterface::class)
+            ->getMock();
+        $prefix = 'ns';
         $returnValue = true;
 
-        $stub = $this->getCacheStub();
-        $stub->expects($this->once())->method('saveDeferred')->with($item)->willReturn($returnValue);
+        $stub = $this->getPoolMock();
+        $stub
+            ->expects($this->once())
+            ->method('saveDeferred')
+            ->with($item)
+            ->willReturn($returnValue);
 
         $pool = new PrefixedCachePool($stub, $prefix);
-        $this->assertEquals($returnValue, $pool->saveDeferred($item));
+        static::assertEquals($returnValue, $pool->saveDeferred($item));
     }
 
-    public function testCommit()
+    public function testCommit(): void
     {
-        $prefix      = 'ns';
+        $prefix = 'ns';
         $returnValue = true;
 
-        $stub = $this->getCacheStub();
-        $stub->expects($this->once())->method('commit')->willReturn($returnValue);
+        $stub = $this->getPoolMock();
+        $stub
+            ->expects($this->once())
+            ->method('commit')
+            ->willReturn($returnValue);
 
         $pool = new PrefixedCachePool($stub, $prefix);
-        $this->assertEquals($returnValue, $pool->commit());
+        static::assertEquals($returnValue, $pool->commit());
     }
 }

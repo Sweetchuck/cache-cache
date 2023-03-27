@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -23,130 +26,194 @@ use Psr\Cache\CacheItemInterface;
 class NamespacedCachePoolTest extends TestCase
 {
     /**
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return \Cache\Namespaced\Tests\HelperInterface&\PHPUnit\Framework\MockObject\MockObject
      */
     private function getHierarchyCacheStub()
     {
-        return $this->getMockBuilder(HelperInterface::class)->setMethods(
-            ['getItem', 'getItems', 'hasItem', 'clear', 'deleteItem', 'deleteItems', 'save', 'saveDeferred', 'commit']
-        )->getMock();
+        return $this
+            ->getMockBuilder(HelperInterface::class)
+            ->onlyMethods([
+                'getItem',
+                'getItems',
+                'hasItem',
+                'clear',
+                'deleteItem',
+                'deleteItems',
+                'save',
+                'saveDeferred',
+                'commit',
+            ])
+            ->getMock();
     }
 
-    public function testGetItem()
+    public function testGetItem(): void
     {
-        $namespace   = 'ns';
-        $key         = 'key';
+        $namespace = 'ns';
+        $key = 'key';
+        $item = $this
+            ->getMockBuilder(CacheItemInterface::class)
+            ->getMock();
+
+        $pool1 = $this->getHierarchyCacheStub();
+        $pool1
+            ->expects($this->once())
+            ->method('getItem')
+            ->with('|'.$namespace.'|'.$key)
+            ->willReturn($item);
+
+        $pool2 = new NamespacedCachePool($pool1, $namespace);
+        static::assertSame($item, $pool2->getItem($key));
+    }
+
+    public function testGetItems(): void
+    {
+        $namespace = 'ns';
+        $key0 = 'key0';
+        $key1 = 'key1';
+        $item0 = $this
+            ->getMockBuilder(CacheItemInterface::class)
+            ->getMock();
+        $item1 = $this
+            ->getMockBuilder(CacheItemInterface::class)
+            ->getMock();
+
+        $pool1 = $this->getHierarchyCacheStub();
+        $pool1
+            ->expects($this->once())
+            ->method('getItems')
+            ->with(["|$namespace|$key0", "|$namespace|$key1"])
+            ->willReturn([
+                "|$namespace|$key0" => $item0,
+                "|$namespace|$key1" => $item1,
+            ]);
+
+        $pool2 = new NamespacedCachePool($pool1, $namespace);
+        $actual = $pool2->getItems([$key0, $key1]);
+        static::assertSame(
+            [
+                "|$namespace|$key0",
+                "|$namespace|$key1",
+            ],
+            array_keys($actual),
+        );
+    }
+
+    public function testHasItem(): void
+    {
+        $namespace = 'ns';
+        $key = 'key';
         $returnValue = true;
 
         $stub = $this->getHierarchyCacheStub();
-        $stub->expects($this->once())->method('getItem')->with('|'.$namespace.'|'.$key)->willReturn($returnValue);
+        $stub
+            ->expects($this->once())
+            ->method('hasItem')
+            ->with("|$namespace|$key")
+            ->willReturn($returnValue);
 
         $pool = new NamespacedCachePool($stub, $namespace);
-        $this->assertEquals($returnValue, $pool->getItem($key));
+        static::assertEquals($returnValue, $pool->hasItem($key));
     }
 
-    public function testGetItems()
+    public function testClear(): void
     {
-        $namespace   = 'ns';
-        $key0        = 'key0';
-        $key1        = 'key1';
+        $namespace = 'ns';
         $returnValue = true;
 
         $stub = $this->getHierarchyCacheStub();
-        $stub->expects($this->once())->method('getItems')->with(['|'.$namespace.'|'.$key0, '|'.$namespace.'|'.$key1])->willReturn($returnValue);
+        $stub
+            ->expects($this->once())
+            ->method('deleteItem')
+            ->with("|$namespace")
+            ->willReturn($returnValue);
 
         $pool = new NamespacedCachePool($stub, $namespace);
-        $this->assertEquals($returnValue, $pool->getItems([$key0, $key1]));
+        static::assertEquals($returnValue, $pool->clear());
     }
 
-    public function testHasItem()
+    public function testDeleteItem(): void
     {
-        $namespace   = 'ns';
-        $key         = 'key';
+        $namespace = 'ns';
+        $key = 'key';
         $returnValue = true;
 
         $stub = $this->getHierarchyCacheStub();
-        $stub->expects($this->once())->method('hasItem')->with('|'.$namespace.'|'.$key)->willReturn($returnValue);
+        $stub
+            ->expects($this->once())
+            ->method('deleteItem')
+            ->with("|$namespace|$key")
+            ->willReturn($returnValue);
 
         $pool = new NamespacedCachePool($stub, $namespace);
-        $this->assertEquals($returnValue, $pool->hasItem($key));
+        static::assertEquals($returnValue, $pool->deleteItem($key));
     }
 
-    public function testClear()
+    public function testDeleteItems(): void
     {
-        $namespace   = 'ns';
-        $key         = 'key';
+        $namespace = 'ns';
+        $key0 = 'key0';
+        $key1 = 'key1';
         $returnValue = true;
 
         $stub = $this->getHierarchyCacheStub();
-        $stub->expects($this->once())->method('deleteItem')->with('|'.$namespace)->willReturn($returnValue);
+        $stub
+            ->expects($this->once())
+            ->method('deleteItems')
+            ->with(["|$namespace|$key0", "|$namespace|$key1"])
+            ->willReturn($returnValue);
 
         $pool = new NamespacedCachePool($stub, $namespace);
-        $this->assertEquals($returnValue, $pool->clear($key));
+        static::assertEquals($returnValue, $pool->deleteItems([$key0, $key1]));
     }
 
-    public function testDeleteItem()
+    public function testSave(): void
     {
-        $namespace   = 'ns';
-        $key         = 'key';
+        $item = $this->getMockBuilder(CacheItemInterface::class)->getMock();
+        $namespace = 'ns';
         $returnValue = true;
 
         $stub = $this->getHierarchyCacheStub();
-        $stub->expects($this->once())->method('deleteItem')->with('|'.$namespace.'|'.$key)->willReturn($returnValue);
+        $stub
+            ->expects($this->once())
+            ->method('save')
+            ->with($item)
+            ->willReturn($returnValue);
 
         $pool = new NamespacedCachePool($stub, $namespace);
-        $this->assertEquals($returnValue, $pool->deleteItem($key));
+        static::assertEquals($returnValue, $pool->save($item));
     }
 
-    public function testDeleteItems()
+    public function testSaveDeferred(): void
     {
-        $namespace   = 'ns';
-        $key0        = 'key0';
-        $key1        = 'key1';
+        $item = $this
+            ->getMockBuilder(CacheItemInterface::class)
+            ->getMock();
+        $namespace = 'ns';
         $returnValue = true;
 
         $stub = $this->getHierarchyCacheStub();
-        $stub->expects($this->once())->method('deleteItems')->with(['|'.$namespace.'|'.$key0, '|'.$namespace.'|'.$key1])->willReturn($returnValue);
+        $stub
+            ->expects($this->once())
+            ->method('saveDeferred')
+            ->with($item)
+            ->willReturn($returnValue);
 
         $pool = new NamespacedCachePool($stub, $namespace);
-        $this->assertEquals($returnValue, $pool->deleteItems([$key0, $key1]));
+        static::assertEquals($returnValue, $pool->saveDeferred($item));
     }
 
-    public function testSave()
+    public function testCommit(): void
     {
-        $item        = $this->getMockBuilder(CacheItemInterface::class)->getMock();
-        $namespace   = 'ns';
+        $namespace = 'ns';
         $returnValue = true;
 
         $stub = $this->getHierarchyCacheStub();
-        $stub->expects($this->once())->method('save')->with($item)->willReturn($returnValue);
+        $stub
+            ->expects($this->once())
+            ->method('commit')
+            ->willReturn($returnValue);
 
         $pool = new NamespacedCachePool($stub, $namespace);
-        $this->assertEquals($returnValue, $pool->save($item));
-    }
-
-    public function testSaveDeferred()
-    {
-        $item        = $this->getMockBuilder(CacheItemInterface::class)->getMock();
-        $namespace   = 'ns';
-        $returnValue = true;
-
-        $stub = $this->getHierarchyCacheStub();
-        $stub->expects($this->once())->method('saveDeferred')->with($item)->willReturn($returnValue);
-
-        $pool = new NamespacedCachePool($stub, $namespace);
-        $this->assertEquals($returnValue, $pool->saveDeferred($item));
-    }
-
-    public function testCommit()
-    {
-        $namespace   = 'ns';
-        $returnValue = true;
-
-        $stub = $this->getHierarchyCacheStub();
-        $stub->expects($this->once())->method('commit')->willReturn($returnValue);
-
-        $pool = new NamespacedCachePool($stub, $namespace);
-        $this->assertEquals($returnValue, $pool->commit());
+        static::assertEquals($returnValue, $pool->commit());
     }
 }

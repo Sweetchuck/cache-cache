@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -28,25 +31,23 @@ use Psr\Cache\CacheItemInterface;
  */
 class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
 {
-    /**
-     * @type bool
-     */
-    private $initialized = false;
+    private bool $initialized = false;
+
+    private CacheItemInterface $cacheItem;
 
     /**
-     * @type CacheItemInterface
+     * @var string[]
      */
-    private $cacheItem;
+    private array $prevTags = [];
 
     /**
-     * @type array<string>
+     * @var string[]
      */
-    private $prevTags = [];
+    private array $tags = [];
 
-    /**
-     * @type array<string>
-     */
-    private $tags = [];
+    protected string $reservedChars = '{}()/\\@:';
+
+    protected string $reservedCharsPattern = '';
 
     /**
      * @param CacheItemInterface $cacheItem
@@ -54,22 +55,18 @@ class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
     private function __construct(CacheItemInterface $cacheItem)
     {
         $this->cacheItem = $cacheItem;
+        $this->reservedCharsPattern = '/[' . preg_quote($this->reservedChars, '/') . ']/';
     }
 
     /**
-     * @param CacheItemInterface $cacheItem
-     *
-     * @return TaggablePSR6ItemAdapter
+     * @return static
      */
     public static function makeTaggable(CacheItemInterface $cacheItem)
     {
         return new self($cacheItem);
     }
 
-    /**
-     * @return CacheItemInterface
-     */
-    public function unwrap()
+    public function unwrap(): CacheItemInterface
     {
         return $this->cacheItem;
     }
@@ -77,7 +74,7 @@ class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function getKey()
+    public function getKey(): string
     {
         return $this->cacheItem->getKey();
     }
@@ -85,23 +82,23 @@ class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function get()
+    public function get(): mixed
     {
         $rawItem = $this->cacheItem->get();
 
-        // If it is a cache item we created
+        // If it is a cache item we created.
         if ($this->isItemCreatedHere($rawItem)) {
             return $rawItem['value'];
         }
 
-        // This is an item stored before we used this fake cache
+        // This is an item stored before we used this fake cache.
         return $rawItem;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function isHit()
+    public function isHit(): bool
     {
         return $this->cacheItem->isHit();
     }
@@ -109,7 +106,7 @@ class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function set($value)
+    public function set(mixed $value): static
     {
         $this->initializeTags();
 
@@ -124,7 +121,7 @@ class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function getPreviousTags()
+    public function getPreviousTags(): array
     {
         $this->initializeTags();
 
@@ -132,9 +129,9 @@ class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return string[]
      */
-    public function getTags()
+    public function getTags(): array
     {
         return $this->tags;
     }
@@ -142,35 +139,51 @@ class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function setTags(array $tags)
+    public function setTags(iterable $tags): static
     {
         $this->tags = [];
 
         return $this->tag($tags);
     }
 
-    private function tag($tags)
+    /**
+     * @param string|\Stringable|iterable<string|\Stringable> $tags
+     */
+    private function tag(string|\Stringable|iterable $tags): static
     {
-        if (!is_array($tags)) {
+        if (!is_iterable($tags)) {
             $tags = [$tags];
         }
 
         $this->initializeTags();
 
         foreach ($tags as $tag) {
-            if (!is_string($tag)) {
-                throw new InvalidArgumentException(sprintf('Cache tag must be string, "%s" given', is_object($tag) ? get_class($tag) : gettype($tag)));
+            if (!is_string($tag) && !($tag instanceof \Stringable)) {
+                throw new InvalidArgumentException(sprintf(
+                    'Cache tag must be string, "%s" given',
+                    is_object($tag) ? get_class($tag) : gettype($tag),
+                ));
             }
-            if (isset($this->tags[$tag])) {
+
+            $string = (string) $tag;
+
+            if (isset($this->tags[$string])) {
                 continue;
             }
-            if (!isset($tag[0])) {
+
+            if (!strlen($string)) {
                 throw new InvalidArgumentException('Cache tag length must be greater than zero');
             }
-            if (isset($tag[strcspn($tag, '{}()/\@:')])) {
-                throw new InvalidArgumentException(sprintf('Cache tag "%s" contains reserved characters {}()/\@:', $tag));
+
+            if (preg_match($this->reservedCharsPattern, $string) === 1) {
+                throw new InvalidArgumentException(sprintf(
+                    'Cache tag "%s" contains reserved characters %s',
+                    $string,
+                    $this->reservedChars,
+                ));
             }
-            $this->tags[$tag] = $tag;
+
+            $this->tags[$string] = $string;
         }
 
         $this->updateTags();
@@ -181,7 +194,7 @@ class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function expiresAt($expiration)
+    public function expiresAt(?\DateTimeInterface $expiration): static
     {
         $this->cacheItem->expiresAt($expiration);
 
@@ -191,45 +204,50 @@ class TaggablePSR6ItemAdapter implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function expiresAfter($time)
+    public function expiresAfter(int|\DateInterval|null $time): static
     {
         $this->cacheItem->expiresAfter($time);
 
         return $this;
     }
 
-    private function updateTags()
+    private function updateTags(): static
     {
         $this->cacheItem->set([
             'value' => $this->get(),
             'tags'  => $this->tags,
         ]);
+
+        return $this;
     }
 
-    private function initializeTags()
+    private function initializeTags(): static
     {
-        if (!$this->initialized) {
-            if ($this->cacheItem->isHit()) {
-                $rawItem = $this->cacheItem->get();
-
-                if ($this->isItemCreatedHere($rawItem)) {
-                    $this->prevTags = $rawItem['tags'];
-                }
-            }
-
-            $this->initialized = true;
+        if ($this->initialized) {
+            return $this;
         }
+
+        if ($this->cacheItem->isHit()) {
+            $rawItem = $this->cacheItem->get();
+
+            if ($this->isItemCreatedHere($rawItem)) {
+                $this->prevTags = $rawItem['tags'];
+            }
+        }
+
+        $this->initialized = true;
+
+        return $this;
     }
 
     /**
      * Verify that the raw data is a cache item created by this class.
-     *
-     * @param mixed $rawItem
-     *
-     * @return bool
      */
-    private function isItemCreatedHere($rawItem)
+    private function isItemCreatedHere(mixed $rawItem): bool
     {
-        return is_array($rawItem) && array_key_exists('value', $rawItem) && array_key_exists('tags', $rawItem) && count($rawItem) === 2;
+        return is_array($rawItem)
+            && array_key_exists('value', $rawItem)
+            && array_key_exists('tags', $rawItem)
+            && count($rawItem) === 2;
     }
 }

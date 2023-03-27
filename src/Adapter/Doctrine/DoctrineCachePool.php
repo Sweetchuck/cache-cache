@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -24,14 +27,8 @@ use Doctrine\Common\Cache\FlushableCache;
  */
 class DoctrineCachePool extends AbstractCachePool
 {
-    /**
-     * @type Cache
-     */
-    protected $cache;
+    protected Cache $cache;
 
-    /**
-     * @param Cache $cache
-     */
     public function __construct(Cache $cache)
     {
         $this->cache = $cache;
@@ -40,7 +37,7 @@ class DoctrineCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function fetchObjectFromCache($key)
+    protected function fetchObjectFromCache(string $key): array
     {
         if (false === $data = $this->cache->fetch($key)) {
             return [false, null, [], null];
@@ -52,7 +49,7 @@ class DoctrineCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function clearAllObjectsFromCache()
+    protected function clearAllObjectsFromCache(): bool
     {
         if ($this->cache instanceof FlushableCache) {
             return $this->cache->flushAll();
@@ -64,7 +61,7 @@ class DoctrineCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function clearOneObjectFromCache($key)
+    protected function clearOneObjectFromCache(string $key): bool
     {
         return $this->cache->delete($key);
     }
@@ -72,7 +69,7 @@ class DoctrineCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    protected function storeItemInCache(PhpCacheItem $item, ?int $ttl): bool
     {
         if ($ttl === null) {
             $ttl = 0;
@@ -94,7 +91,7 @@ class DoctrineCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function getList($name)
+    protected function getList(string $name): array
     {
         if (false === $list = $this->cache->fetch($name)) {
             return [];
@@ -106,7 +103,7 @@ class DoctrineCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function removeList($name)
+    protected function removeList(string $name): bool
     {
         return $this->cache->delete($name);
     }
@@ -114,7 +111,7 @@ class DoctrineCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function appendListItem($name, $key)
+    protected function appendListItem(string $name, string $key)
     {
         $list   = $this->getList($name);
         $list[] = $key;
@@ -124,7 +121,7 @@ class DoctrineCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function removeListItem($name, $key)
+    protected function removeListItem(string $name, string $key)
     {
         $list = $this->getList($name);
         foreach ($list as $i => $item) {

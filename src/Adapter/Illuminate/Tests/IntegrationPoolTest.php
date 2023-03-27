@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -17,8 +20,13 @@ class IntegrationPoolTest extends CachePoolTest
 {
     use CreatePoolTrait;
 
-    protected $skippedTests = [
-        'testDeleteItem'              => 'Version 5.8 does not return true when deleting non-existent item.',
-        'testDeleteItems'             => 'Version 5.8 does not return true when deleting non-existent item.',
+    /**
+     * {@inheritdoc}
+     *
+     * @phpstan-var array<string, string>
+     */
+    protected array $skippedTests = [
+        'testDeleteItem' => 'Version 5.8 does not return true when deleting non-existent item.',
+        'testDeleteItems' => 'Version 5.8 does not return true when deleting non-existent item.',
     ];
 }

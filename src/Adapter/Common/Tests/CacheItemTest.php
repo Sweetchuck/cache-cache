@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -17,21 +20,21 @@ use Psr\Cache\CacheItemInterface;
 
 class CacheItemTest extends TestCase
 {
-    public function testConstructor()
+    public function testConstructor(): void
     {
         $item = new CacheItem('test_key');
 
-        $this->assertInstanceOf(CacheItem::class, $item);
-        $this->assertInstanceOf(CacheItemInterface::class, $item);
+        static::assertInstanceOf(CacheItem::class, $item);
+        static::assertInstanceOf(CacheItemInterface::class, $item);
     }
 
-    public function testGetKey()
+    public function testGetKey(): void
     {
         $item = new CacheItem('test_key');
-        $this->assertEquals('test_key', $item->getKey());
+        static::assertEquals('test_key', $item->getKey());
     }
 
-    public function testSet()
+    public function testSet(): void
     {
         $item = new CacheItem('test_key');
 
@@ -41,50 +44,50 @@ class CacheItemTest extends TestCase
         $hasValueProp = $ref->getProperty('hasValue');
         $hasValueProp->setAccessible(true);
 
-        $this->assertEquals(null, $valueProp->getValue($item));
-        $this->assertFalse($hasValueProp->getValue($item));
+        static::assertEquals(null, $valueProp->getValue($item));
+        static::assertFalse($hasValueProp->getValue($item));
 
         $item->set('value');
 
-        $this->assertEquals('value', $valueProp->getValue($item));
-        $this->assertTrue($hasValueProp->getValue($item));
+        static::assertEquals('value', $valueProp->getValue($item));
+        static::assertTrue($hasValueProp->getValue($item));
     }
 
-    public function testGet()
+    public function testGet(): void
     {
         $item = new CacheItem('test_key');
-        $this->assertNull($item->get());
+        static::assertNull($item->get());
 
         $item->set('test');
-        $this->assertEquals('test', $item->get());
+        static::assertEquals('test', $item->get());
     }
 
-    public function testHit()
+    public function testHit(): void
     {
         $item = new CacheItem('test_key', true, 'value');
-        $this->assertTrue($item->isHit());
+        static::assertTrue($item->isHit());
 
         $item = new CacheItem('test_key', false, 'value');
-        $this->assertFalse($item->isHit());
+        static::assertFalse($item->isHit());
 
         $closure = function () {
             return [true, 'value', []];
         };
         $item = new CacheItem('test_key', $closure);
-        $this->assertTrue($item->isHit());
+        static::assertTrue($item->isHit());
 
         $closure = function () {
             return [false, null, []];
         };
         $item = new CacheItem('test_key', $closure);
-        $this->assertFalse($item->isHit());
+        static::assertFalse($item->isHit());
     }
 
-    public function testGetExpirationTimestamp()
+    public function testGetExpirationTimestamp(): void
     {
         $item = new CacheItem('test_key');
 
-        $this->assertNull($item->getExpirationTimestamp());
+        static::assertNull($item->getExpirationTimestamp());
 
         $timestamp = time();
 
@@ -93,34 +96,33 @@ class CacheItemTest extends TestCase
         $prop->setAccessible(true);
         $prop->setValue($item, $timestamp);
 
-        $this->assertEquals($timestamp, $item->getExpirationTimestamp());
+        static::assertEquals($timestamp, $item->getExpirationTimestamp());
     }
 
-    public function testExpiresAt()
+    public function testExpiresAt(): void
     {
         $item = new CacheItem('test_key');
 
-        $this->assertNull($item->getExpirationTimestamp());
+        static::assertNull($item->getExpirationTimestamp());
 
-        $time = time() + 1;
-        $item->expiresAt($time);
+        $expires = new \DateTime('+1 second');
+        $item->expiresAt($expires);
 
-        $this->assertEquals($time, $item->getExpirationTimestamp());
+        static::assertEquals($expires->getTimestamp(), $item->getExpirationTimestamp());
     }
 
-    public function testExpiresAfter()
+    public function testExpiresAfter(): void
     {
         $item = new CacheItem('test_key');
 
-        $this->assertNull($item->getExpirationTimestamp());
+        static::assertNull($item->getExpirationTimestamp());
 
         $item->expiresAfter(null);
-        $this->assertNull($this->getExpectedException());
 
         $item->expiresAfter(new \DateInterval('PT1S'));
-        $this->assertEquals((new \DateTime('+1 second'))->getTimestamp(), $item->getExpirationTimestamp());
+        static::assertEquals((new \DateTime('+1 second'))->getTimestamp(), $item->getExpirationTimestamp());
 
         $item->expiresAfter(1);
-        $this->assertEquals((new \DateTime('+1 second'))->getTimestamp(), $item->getExpirationTimestamp());
+        static::assertEquals((new \DateTime('+1 second'))->getTimestamp(), $item->getExpirationTimestamp());
     }
 }

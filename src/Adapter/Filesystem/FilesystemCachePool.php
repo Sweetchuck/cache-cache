@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -23,23 +26,14 @@ use League\Flysystem\FilesystemInterface;
  */
 class FilesystemCachePool extends AbstractCachePool
 {
-    /**
-     * @type FilesystemInterface
-     */
-    private $filesystem;
+    private FilesystemInterface $filesystem;
 
     /**
      * The folder should not begin nor end with a slash. Example: path/to/cache.
-     *
-     * @type string
      */
-    private $folder;
+    private string $folder;
 
-    /**
-     * @param FilesystemInterface $filesystem
-     * @param string              $folder
-     */
-    public function __construct(FilesystemInterface $filesystem, $folder = 'cache')
+    public function __construct(FilesystemInterface $filesystem, string $folder = 'cache')
     {
         $this->folder = $folder;
 
@@ -47,24 +41,23 @@ class FilesystemCachePool extends AbstractCachePool
         $this->filesystem->createDir($this->folder);
     }
 
-    /**
-     * @param string $folder
-     */
-    public function setFolder($folder)
+    public function setFolder(string $folder): static
     {
         $this->folder = $folder;
+
+        return $this;
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function fetchObjectFromCache($key)
+    protected function fetchObjectFromCache(string $key): array
     {
         $empty = [false, null, [], null];
         $file  = $this->getFilePath($key);
 
         try {
-            $data = @unserialize($this->filesystem->read($file));
+            $data = @unserialize($this->filesystem->read($file) ?: '');
             if ($data === false) {
                 return $empty;
             }
@@ -89,7 +82,7 @@ class FilesystemCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function clearAllObjectsFromCache()
+    protected function clearAllObjectsFromCache(): bool
     {
         $this->filesystem->deleteDir($this->folder);
         $this->filesystem->createDir($this->folder);
@@ -100,7 +93,7 @@ class FilesystemCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function clearOneObjectFromCache($key)
+    protected function clearOneObjectFromCache(string $key): bool
     {
         return $this->forceClear($key);
     }
@@ -108,19 +101,19 @@ class FilesystemCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    protected function storeItemInCache(PhpCacheItem $item, ?int $ttl): bool
     {
         $data = serialize(
             [
                 $item->get(),
                 $item->getTags(),
                 $item->getExpirationTimestamp(),
-            ]
+            ],
         );
 
         $file = $this->getFilePath($item->getKey());
         if ($this->filesystem->has($file)) {
-            // Update file if it exists
+            // Update file if it exists.
             return $this->filesystem->update($file, $data);
         }
 
@@ -133,16 +126,15 @@ class FilesystemCachePool extends AbstractCachePool
     }
 
     /**
-     * @param string $key
-     *
      * @throws InvalidArgumentException
-     *
-     * @return string
      */
-    private function getFilePath($key)
+    private function getFilePath(string $key): string
     {
         if (!preg_match('|^[a-zA-Z0-9_\.! ]+$|', $key)) {
-            throw new InvalidArgumentException(sprintf('Invalid key "%s". Valid filenames must match [a-zA-Z0-9_\.! ].', $key));
+            throw new InvalidArgumentException(sprintf(
+                'Invalid key "%s". Valid filenames must match [a-zA-Z0-9_\.! ].',
+                $key,
+            ));
         }
 
         return sprintf('%s/%s', $this->folder, $key);
@@ -151,7 +143,7 @@ class FilesystemCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function getList($name)
+    protected function getList(string $name): array
     {
         $file = $this->getFilePath($name);
 
@@ -159,33 +151,34 @@ class FilesystemCachePool extends AbstractCachePool
             $this->filesystem->write($file, serialize([]));
         }
 
-        return unserialize($this->filesystem->read($file));
+        return unserialize($this->filesystem->read($file) ?: 'a:0:{}') ?: [];
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function removeList($name)
+    protected function removeList(string $name): bool
     {
         $file = $this->getFilePath($name);
-        $this->filesystem->delete($file);
+
+        return $this->filesystem->delete($file);
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function appendListItem($name, $key)
+    protected function appendListItem(string $name, string $key)
     {
         $list   = $this->getList($name);
         $list[] = $key;
 
-        return $this->filesystem->update($this->getFilePath($name), serialize($list));
+        $this->filesystem->update($this->getFilePath($name), serialize($list));
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function removeListItem($name, $key)
+    protected function removeListItem(string $name, string $key)
     {
         $list = $this->getList($name);
         foreach ($list as $i => $item) {
@@ -194,15 +187,10 @@ class FilesystemCachePool extends AbstractCachePool
             }
         }
 
-        return $this->filesystem->update($this->getFilePath($name), serialize($list));
+        $this->filesystem->update($this->getFilePath($name), serialize($list));
     }
 
-    /**
-     * @param $key
-     *
-     * @return bool
-     */
-    private function forceClear($key)
+    private function forceClear(string $key): bool
     {
         try {
             return $this->filesystem->delete($this->getFilePath($key));

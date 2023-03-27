@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -14,17 +17,19 @@ namespace Cache\SessionHandler\Tests;
 use Cache\Adapter\PHPArray\ArrayCachePool;
 use Cache\SessionHandler\Psr6SessionHandler;
 use Psr\Cache\CacheItemInterface;
-use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * @author Aaron Scherer <aequasi@gmail.com>
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  * @author Daniel Bannert <d.bannert@anolilab.de>s
+ *
+ * @property \Cache\SessionHandler\Psr6SessionHandler $handler
  */
-class Psr6SessionHandlerTest extends AbstractSessionHandlerTest
+class Psr6SessionHandlerTest extends AbstractSessionHandlerTestBase
 {
+
     /**
-     * @type \PHPUnit_Framework_MockObject_MockObject|CacheItemPoolInterface
+     * @var \PHPUnit\Framework\MockObject\MockObject&\Psr\Cache\CacheItemPoolInterface
      */
     private $psr6;
 
@@ -32,88 +37,116 @@ class Psr6SessionHandlerTest extends AbstractSessionHandlerTest
     {
         parent::setUp();
 
-        $this->psr6 = $this->getMockBuilder(ArrayCachePool::class)
-            ->setMethods(['getItem', 'deleteItem', 'save'])
+        $this->psr6 = $this
+            ->getMockBuilder(ArrayCachePool::class)
+            ->onlyMethods(['getItem', 'deleteItem', 'save'])
             ->getMock();
-        $this->handler = new Psr6SessionHandler($this->psr6, ['prefix' => self::PREFIX, 'ttl' => self::TTL]);
+
+        $this->handler = new Psr6SessionHandler(
+            $this->psr6,
+            [
+                'prefix' => self::PREFIX,
+                'ttl' => self::TTL,
+            ],
+        );
     }
 
-    public function testReadMiss()
+    public function testReadMiss(): void
     {
         $item = $this->getItemMock();
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('isHit')
             ->willReturn(false);
-        $this->psr6->expects($this->once())
+        $this
+            ->psr6
+            ->expects(static::once())
             ->method('getItem')
             ->willReturn($item);
 
-        $this->assertEquals('', $this->handler->read('foo'));
+        static::assertEquals('', $this->handler->read('foo'));
     }
 
-    public function testReadHit()
+    public function testReadHit(): void
     {
         $item = $this->getItemMock();
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('isHit')
             ->willReturn(true);
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('get')
             ->willReturn('bar');
-        $this->psr6->expects($this->once())
+        $this
+            ->psr6
+            ->expects(static::once())
             ->method('getItem')
             ->willReturn($item);
 
-        $this->assertEquals('bar', $this->handler->read('foo'));
+        static::assertEquals('bar', $this->handler->read('foo'));
     }
 
-    public function testWrite()
+    public function testWrite(): void
     {
         $item = $this->getItemMock();
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('set')
             ->with('session value')
             ->willReturnSelf();
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('expiresAfter')
             ->with(self::TTL)
             ->willReturnSelf();
-        $this->psr6->expects($this->once())
+        $this
+            ->psr6
+            ->expects(static::once())
             ->method('getItem')
             ->with(self::PREFIX.'foo')
             ->willReturn($item);
-        $this->psr6->expects($this->once())
+        $this
+            ->psr6
+            ->expects(static::once())
             ->method('save')
             ->with($item)
             ->willReturn(true);
 
-        $this->assertTrue($this->handler->write('foo', 'session value'));
+        static::assertTrue($this->handler->write('foo', 'session value'));
     }
 
-    public function testDestroy()
+    public function testDestroy(): void
     {
-        $this->psr6->expects($this->once())
+        $this
+            ->psr6
+            ->expects(static::once())
             ->method('deleteItem')
             ->with(self::PREFIX.'foo')
             ->willReturn(true);
-        $this->assertTrue($this->handler->destroy('foo'));
+        static::assertTrue($this->handler->destroy('foo'));
     }
 
     /**
      * @dataProvider getOptionFixtures
+     *
+     * @phpstan-param psr6-session-options $options
      */
-    public function testSupportedOptions($options, $supported)
+    public function testSupportedOptions(array $options, bool $supported): void
     {
         try {
             new Psr6SessionHandler($this->psr6, $options);
 
-            $this->assertTrue($supported);
+            static::assertTrue($supported);
         } catch (\InvalidArgumentException $e) {
-            $this->assertFalse($supported);
+            static::assertFalse($supported);
         }
     }
 
-    public function getOptionFixtures()
+    /**
+     * @phpstan-return array<mixed>
+     */
+    public static function getOptionFixtures(): array
     {
         return [
             [['prefix' => 'session'], true],
@@ -123,58 +156,71 @@ class Psr6SessionHandlerTest extends AbstractSessionHandlerTest
         ];
     }
 
-    public function testUpdateTimestamp()
+    public function testUpdateTimestamp(): void
     {
         $item = $this->getItemMock();
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('set')
             ->with('session value')
             ->willReturnSelf();
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('expiresAfter')
             ->with(self::TTL)
             ->willReturnSelf();
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('expiresAt')
-            ->with(\DateTime::createFromFormat('U', \time() + self::TTL))
+            ->with(\DateTime::createFromFormat('U', (string) (\time() + self::TTL)))
             ->willReturnSelf();
-        $this->psr6->expects($this->exactly(2))
+        $this
+            ->psr6
+            ->expects(static::exactly(2))
             ->method('getItem')
             ->with(self::PREFIX.'foo')
             ->willReturn($item);
-        $this->psr6->expects($this->exactly(2))
+        $this
+            ->psr6
+            ->expects(static::exactly(2))
             ->method('save')
             ->with($item)
             ->willReturn(true);
 
         $this->handler->write('foo', 'session value');
 
-        $this->assertTrue($this->handler->updateTimestamp('foo', 'session value'));
+        static::assertTrue($this->handler->updateTimestamp('foo', 'session value'));
     }
 
-    public function testValidateId()
+    public function testValidateId(): void
     {
         $item = $this->getItemMock();
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('isHit')
             ->willReturn(true);
-        $item->expects($this->once())
+        $item
+            ->expects(static::once())
             ->method('get')
             ->willReturn('bar');
-        $this->psr6->expects($this->once())
+        $this
+            ->psr6
+            ->expects(static::once())
             ->method('getItem')
             ->willReturn($item);
 
-        $this->assertTrue($this->handler->validateId('foo'));
+        static::assertTrue($this->handler->validateId('foo'));
     }
 
     /**
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return \Cache\Adapter\Common\CacheItem&\PHPUnit\Framework\MockObject\MockObject
      */
     private function getItemMock()
     {
-        return $this->getMockBuilder(CacheItemInterface::class)
-            ->setMethods(['isHit', 'getKey', 'get', 'set', 'expiresAt', 'expiresAfter'])
+        return $this
+            ->getMockBuilder(\Cache\Adapter\Common\CacheItem::class)
+            ->setConstructorArgs(['my-key-01'])
+            ->onlyMethods(['isHit', 'getKey', 'get', 'set', 'expiresAt', 'expiresAfter'])
             ->getMock();
     }
 }

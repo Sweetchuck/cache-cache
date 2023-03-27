@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -15,14 +18,18 @@ use Cache\Adapter\PHPArray\ArrayCachePool;
 
 trait CreatePoolTrait
 {
-    private $cacheArray = [];
 
-    public function createCachePool()
+    /**
+     * @var array<string, array<string>>
+     */
+    private array $cacheArray = [];
+
+    public function createCachePool(): ArrayCachePool
     {
         return new ArrayCachePool(null, $this->cacheArray);
     }
 
-    public function createSimpleCache()
+    public function createSimpleCache(): ArrayCachePool
     {
         return $this->createCachePool();
     }

@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -22,21 +25,11 @@ use Psr\Cache\CacheItemInterface;
  */
 class NamespacedCachePool implements HierarchicalPoolInterface
 {
-    /**
-     * @type HierarchicalPoolInterface
-     */
-    private $cachePool;
+    private HierarchicalPoolInterface $cachePool;
 
-    /**
-     * @type string
-     */
-    private $namespace;
+    private string $namespace;
 
-    /**
-     * @param HierarchicalPoolInterface $cachePool
-     * @param string                    $namespace
-     */
-    public function __construct(HierarchicalPoolInterface $cachePool, $namespace)
+    public function __construct(HierarchicalPoolInterface $cachePool, string $namespace)
     {
         $this->cachePool = $cachePool;
         $this->namespace = $namespace;
@@ -44,87 +37,101 @@ class NamespacedCachePool implements HierarchicalPoolInterface
 
     /**
      * Add namespace prefix on the key.
-     *
-     * @param array $keys
      */
-    private function prefixValue(&$key)
+    private function prefixValue(string &$key): static
     {
         // |namespace|key
-        $key = HierarchicalPoolInterface::HIERARCHY_SEPARATOR.$this->namespace.HierarchicalPoolInterface::HIERARCHY_SEPARATOR.$key;
+        $key = HierarchicalPoolInterface::HIERARCHY_SEPARATOR
+            .$this->namespace
+            .HierarchicalPoolInterface::HIERARCHY_SEPARATOR
+            .$key;
+
+        return $this;
     }
 
     /**
-     * @param array $keys
+     * @param string[] $keys
      */
-    private function prefixValues(array &$keys)
+    private function prefixValues(array &$keys): static
     {
         foreach ($keys as &$key) {
             $this->prefixValue($key);
         }
+
+        return $this;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getItem($key)
+    public function getItem(string $key): CacheItemInterface
     {
-        $this->prefixValue($key);
-
-        return $this->cachePool->getItem($key);
+        return $this
+            ->prefixValue($key)
+            ->cachePool
+            ->getItem($key);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @phpstan-return iterable<string, \Psr\Cache\CacheItemInterface>
      */
-    public function getItems(array $keys = [])
+    public function getItems(array $keys = []): iterable
     {
-        $this->prefixValues($keys);
-
-        return $this->cachePool->getItems($keys);
+        return $this
+            ->prefixValues($keys)
+            ->cachePool
+            ->getItems($keys);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function hasItem($key)
+    public function hasItem(string $key): bool
     {
-        $this->prefixValue($key);
-
-        return $this->cachePool->hasItem($key);
+        return $this
+            ->prefixValue($key)
+            ->cachePool
+            ->hasItem($key);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function clear()
+    public function clear(): bool
     {
-        return $this->cachePool->deleteItem(HierarchicalPoolInterface::HIERARCHY_SEPARATOR.$this->namespace);
+        return $this
+            ->cachePool
+            ->deleteItem(HierarchicalPoolInterface::HIERARCHY_SEPARATOR.$this->namespace);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function deleteItem($key)
+    public function deleteItem(string $key): bool
     {
-        $this->prefixValue($key);
-
-        return $this->cachePool->deleteItem($key);
+        return $this
+            ->prefixValue($key)
+            ->cachePool
+            ->deleteItem($key);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function deleteItems(array $keys)
+    public function deleteItems(array $keys): bool
     {
-        $this->prefixValues($keys);
-
-        return $this->cachePool->deleteItems($keys);
+        return $this
+            ->prefixValues($keys)
+            ->cachePool
+            ->deleteItems($keys);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function save(CacheItemInterface $item)
+    public function save(CacheItemInterface $item): bool
     {
         return $this->cachePool->save($item);
     }
@@ -132,7 +139,7 @@ class NamespacedCachePool implements HierarchicalPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function saveDeferred(CacheItemInterface $item)
+    public function saveDeferred(CacheItemInterface $item): bool
     {
         return $this->cachePool->saveDeferred($item);
     }
@@ -140,7 +147,7 @@ class NamespacedCachePool implements HierarchicalPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function commit()
+    public function commit(): bool
     {
         return $this->cachePool->commit();
     }

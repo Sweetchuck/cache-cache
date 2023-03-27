@@ -1,26 +1,65 @@
 <?xml version="1.0"?>
 <psalm
-    errorLevel="8"
-    resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
-    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
-    errorBaseline="psalm.baseline.xml"
->
+    xsi:schemaLocation="https://getpsalm.org/schema/config ./vendor/vimeo/psalm/config.xsd"
+    errorLevel="8"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="true"
+    errorBaseline="./.psalm/baseline.xml">
+
     <projectFiles>
-        <directory name="src" />
+        <directory name="src/" />
         <ignoreFiles>
-            <directory name="src/Adapter/*/Tests" />
-            <directory name="src/Adapter/MongoDB" />
-            <directory name="src/Bridge/*/Tests" />
-            <directory name="src/Encryption/Tests" />
-            <directory name="src/Hierarchy/Tests" />
-            <directory name="src/Namespaced/Tests" />
-            <directory name="src/Prefixed/Tests" />
-            <directory name="src/SessionHandler/Tests" />
-            <directory name="src/Taggable/Tests" />
-            <directory name="src/Util/Tests" />
-            <directory name="vendor" />
+            <!--<directory name="src/Adapter/Apc/Tests" />-->
+            <!--<directory name="src/Adapter/Apcu/Tests" />-->
+            <!--<directory name="src/Adapter/Chain/Tests" />-->
+            <!--<directory name="src/Adapter/Common/Tests" />-->
+            <!--<directory name="src/Adapter/Doctrine/Tests" />-->
+            <!--<directory name="src/Adapter/Filesystem/Tests" />-->
+            <!--<directory name="src/Adapter/Illuminate/Tests" />-->
+            <!--<directory name="src/Adapter/Memcache/Tests" />-->
+            <!--<directory name="src/Adapter/Memcached/Tests" />-->
+            <!--<directory name="src/Adapter/MongoDB/Tests" />-->
+            <!--<directory name="src/Adapter/PHPArray/Tests" />-->
+            <!--<directory name="src/Adapter/Predis/Tests" />-->
+            <!--<directory name="src/Adapter/Redis/Tests" />-->
+            <!--<directory name="src/Adapter/Void/Tests" />-->
+            <!--<directory name="src/Bridge/Doctrine/Tests" />-->
+            <!--<directory name="src/Bridge/SimpleCache/Tests" />-->
+            <!--<directory name="src/Encryption/Tests" />-->
+            <!--<directory name="src/Hierarchy/Tests" />-->
+            <!--<directory name="src/Namespaced/Tests" />-->
+            <!--<directory name="src/Prefixed/Tests" />-->
+            <!--<directory name="src/SessionHandler/Tests" />-->
+            <!--<directory name="src/Taggable/Tests" />-->
+            <!--<directory name="src/Util/Tests" />-->
+
+            <!--<directory name="src/Adapter/Apc/vendor/"  />-->
+            <!--<directory name="src/Adapter/Apcu/vendor/" />-->
+            <!--<directory name="src/Adapter/Chain/vendor/" />-->
+            <!--<directory name="src/Adapter/Common/vendor/" />-->
+            <!--<directory name="src/Adapter/Doctrine/vendor/" />-->
+            <!--<directory name="src/Adapter/Filesystem/vendor/" />-->
+            <!--<directory name="src/Adapter/Illuminate/vendor/" />-->
+            <!--<directory name="src/Adapter/Memcache/vendor/" />-->
+            <!--<directory name="src/Adapter/Memcached/vendor/" />-->
+            <!--<directory name="src/Adapter/MongoDB/vendor/" />-->
+            <!--<directory name="src/Adapter/PHPArray/vendor/" />-->
+            <!--<directory name="src/Adapter/Predis/vendor/" />-->
+            <!--<directory name="src/Adapter/Redis/vendor/" />-->
+            <!--<directory name="src/Adapter/Void/vendor/" />-->
+            <!--<directory name="src/Bridge/Doctrine/vendor/" />-->
+            <!--<directory name="src/Bridge/SimpleCache/vendor/" />-->
+            <!--<directory name="src/Encryption/vendor/" />-->
+            <!--<directory name="src/Hierarchy/vendor/" />-->
+            <!--<directory name="src/Namespaced/vendor/" />-->
+            <!--<directory name="src/Prefixed/vendor/" />-->
+            <!--<directory name="src/SessionHandler/vendor/" />-->
+            <!--<directory name="src/TagInterop/vendor/" />-->
+            <!--<directory name="src/Taggable/vendor/" />-->
+            <!--<directory name="src/Util/vendor/" />-->
+            <directory name="vendor/" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

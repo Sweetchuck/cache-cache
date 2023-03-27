@@ -1,0 +1,29 @@
+parameters:
+#    scanDirectories:
+#        - ../vendor/
+    paths:
+        - ../src/
+    excludePaths:
+        - ../src/Adapter/Apcu/vendor/
+        - ../src/Adapter/Chain/vendor/
+        - ../src/Adapter/Common/vendor/
+        - ../src/Adapter/Doctrine/vendor/
+        - ../src/Adapter/Filesystem/vendor/
+        - ../src/Adapter/Illuminate/vendor/
+        - ../src/Adapter/Memcache/vendor/
+        - ../src/Adapter/Memcached/vendor/
+        - ../src/Adapter/MongoDB/vendor/
+        - ../src/Adapter/PHPArray/vendor/
+        - ../src/Adapter/Predis/vendor/
+        - ../src/Adapter/Redis/vendor/
+        - ../src/Adapter/Void/vendor/
+        - ../src/Bridge/Doctrine/vendor/
+        - ../src/Bridge/SimpleCache/vendor/
+        - ../src/Encryption/vendor/
+        - ../src/Hierarchy/vendor/
+        - ../src/Namespaced/vendor/
+        - ../src/Prefixed/vendor/
+        - ../src/SessionHandler/vendor/
+        - ../src/TagInterop/vendor/
+        - ../src/Taggable/vendor/
+        - ../src/Util/vendor/

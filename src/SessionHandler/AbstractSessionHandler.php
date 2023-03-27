@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -18,56 +21,37 @@ namespace Cache\SessionHandler;
  */
 abstract class AbstractSessionHandler implements \SessionHandlerInterface, \SessionUpdateTimestampHandlerInterface
 {
-    /**
-     * @type string|null
-     */
-    private $sessionName;
+    private ?string $prefetchId = null;
 
-    /**
-     * @type string|null
-     */
-    private $prefetchId;
+    private ?string $prefetchData = null;
 
-    /**
-     * @type string|null
-     */
-    private $prefetchData;
+    private ?string $newSessionId = null;
 
-    /**
-     * @type string|null
-     */
-    private $newSessionId;
-
-    /**
-     * @type string|null
-     */
-    private $igbinaryEmptyData;
+    private ?string $igbinaryEmptyData = null;
 
     /**
      * {@inheritdoc}
      */
-    public function open($savePath, $sessionName)
+    public function open(string $path, string $name): bool
     {
-        $this->sessionName = $sessionName;
-
         return true;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function validateId($sessionId)
+    public function validateId(string $id): bool
     {
-        $this->prefetchData = $this->read($sessionId);
-        $this->prefetchId   = $sessionId;
+        $this->prefetchData = $this->read($id) ?: null;
+        $this->prefetchId = $id;
 
-        return $this->prefetchData !== '';
+        return $this->prefetchData !== null;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function read($sessionId)
+    public function read(string $id): string|false
     {
         if ($this->prefetchId !== null) {
             $prefetchId   = $this->prefetchId;
@@ -75,19 +59,15 @@ abstract class AbstractSessionHandler implements \SessionHandlerInterface, \Sess
 
             $this->prefetchId = $this->prefetchData = null;
 
-            if ($prefetchId === $sessionId || '' === $prefetchData) {
-                $this->newSessionId = '' === $prefetchData ? $sessionId : null;
+            if ($prefetchId === $id || '' === $prefetchData) {
+                $this->newSessionId = '' === $prefetchData ? $id : null;
 
                 return $prefetchData;
             }
         }
 
-        $data               = $this->doRead($sessionId);
-        $this->newSessionId = '' === $data ? $sessionId : null;
-
-        if (\PHP_VERSION_ID < 70000) {
-            $this->prefetchData = $data;
-        }
+        $data = $this->doRead($id);
+        $this->newSessionId = '' === $data ? $id : null;
 
         return $data;
     }
@@ -95,14 +75,14 @@ abstract class AbstractSessionHandler implements \SessionHandlerInterface, \Sess
     /**
      * {@inheritdoc}
      */
-    public function write($sessionId, $data)
+    public function write(string $id, string $data): bool
     {
         if (\PHP_VERSION_ID < 70000 && $this->prefetchData) {
             $readData           = $this->prefetchData;
             $this->prefetchData = null;
 
             if ($readData === $data) {
-                return $this->updateTimestamp($sessionId, $data);
+                return $this->updateTimestamp($id, $data);
             }
         }
 
@@ -112,30 +92,30 @@ abstract class AbstractSessionHandler implements \SessionHandlerInterface, \Sess
         }
 
         if ($data === '' || $this->igbinaryEmptyData === $data) {
-            return $this->destroy($sessionId);
+            return $this->destroy($id);
         }
 
         $this->newSessionId = null;
 
-        return $this->doWrite($sessionId, $data);
+        return $this->doWrite($id, $data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function destroy($sessionId)
+    public function destroy(string $id): bool
     {
         if (\PHP_VERSION_ID < 70000) {
             $this->prefetchData = null;
         }
 
-        return $this->newSessionId === $sessionId || $this->doDestroy($sessionId);
+        return $this->newSessionId === $id || $this->doDestroy($id);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function close()
+    public function close(): bool
     {
         return true;
     }
@@ -143,31 +123,15 @@ abstract class AbstractSessionHandler implements \SessionHandlerInterface, \Sess
     /**
      * {@inheritdoc}
      */
-    public function gc($lifetime)
+    public function gc(int $max_lifetime): int|false
     {
-        // not required here because cache will auto expire the records anyhow.
-        return true;
+        // Not required here because cache will auto expire the records anyhow.
+        return 0;
     }
 
-    /**
-     * @param string $sessionId
-     *
-     * @return string
-     */
-    abstract protected function doRead($sessionId);
+    abstract protected function doRead(string $id): string;
 
-    /**
-     * @param string $sessionId
-     * @param string $data
-     *
-     * @return bool
-     */
-    abstract protected function doWrite($sessionId, $data);
+    abstract protected function doWrite(string $sessionId, string $data): bool;
 
-    /**
-     * @param string $sessionId
-     *
-     * @return bool
-     */
-    abstract protected function doDestroy($sessionId);
+    abstract protected function doDestroy(string $sessionId): bool;
 }

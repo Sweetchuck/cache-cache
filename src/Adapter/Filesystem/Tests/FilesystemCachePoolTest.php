@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -21,7 +24,16 @@ class FilesystemCachePoolTest extends TestCase
 {
     use CreatePoolTrait;
 
-    public function testInvalidKey()
+    /**
+     * {@inheritdoc}
+     */
+    public static function tearDownAfterClass(): void
+    {
+        static::tearDownAfterClassFilesystem();
+        parent::tearDownAfterClass();
+    }
+
+    public function testInvalidKey(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -30,7 +42,7 @@ class FilesystemCachePoolTest extends TestCase
         $pool->getItem('test%string')->get();
     }
 
-    public function testCleanupOnExpire()
+    public function testCleanupOnExpire(): void
     {
         $pool = $this->createCachePool();
 
@@ -38,32 +50,32 @@ class FilesystemCachePoolTest extends TestCase
         $item->set('data');
         $item->expiresAt(new \DateTime('now'));
         $pool->save($item);
-        $this->assertTrue($this->getFilesystem()->has('cache/test_ttl_null'));
+        static::assertTrue($this->getFilesystem()->has('cache/test_ttl_null'));
 
         sleep(1);
 
         $item = $pool->getItem('test_ttl_null');
-        $this->assertFalse($item->isHit());
-        $this->assertFalse($this->getFilesystem()->has('cache/test_ttl_null'));
+        static::assertFalse($item->isHit());
+        static::assertFalse($this->getFilesystem()->has('cache/test_ttl_null'));
     }
 
-    public function testChangeFolder()
+    public function testChangeFolder(): void
     {
         $pool = $this->createCachePool();
         $pool->setFolder('foobar');
 
         $pool->save($pool->getItem('test_path'));
-        $this->assertTrue($this->getFilesystem()->has('foobar/test_path'));
+        static::assertTrue($this->getFilesystem()->has('foobar/test_path'));
     }
 
-    public function testCorruptedCacheFileHandledNicely()
+    public function testCorruptedCacheFileHandledNicely(): void
     {
         $pool = $this->createCachePool();
 
         $this->getFilesystem()->write('cache/corrupt', 'corrupt data');
 
         $item = $pool->getItem('corrupt');
-        $this->assertFalse($item->isHit());
+        static::assertFalse($item->isHit());
 
         $this->getFilesystem()->delete('cache/corrupt');
     }

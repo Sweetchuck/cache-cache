@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -17,23 +20,23 @@ use PHPUnit\Framework\TestCase;
 
 class SimpleCacheUtilTest extends TestCase
 {
-    public function testRememberCacheHit()
+    public function testRememberCacheHit(): void
     {
         $cache = new ArrayCachePool();
         $cache->set('foo', 'bar');
         $res = Util\SimpleCache\remember($cache, 'foo', null, function () {
             throw new \Exception('bad');
         });
-        $this->assertEquals('bar', $res);
+        static::assertEquals('bar', $res);
     }
 
-    public function testRememberCacheMiss()
+    public function testRememberCacheMiss(): void
     {
         $cache = new ArrayCachePool();
         $res   = Util\SimpleCache\remember($cache, 'foo', null, function () {
             return 'bar';
         });
-        $this->assertEquals('bar', $res);
-        $this->assertEquals('bar', $cache->get('foo'));
+        static::assertEquals('bar', $res);
+        static::assertEquals('bar', $cache->get('foo'));
     }
 }

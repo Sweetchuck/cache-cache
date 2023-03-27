@@ -6,8 +6,8 @@
 [![Monthly Downloads](https://poser.pugx.org/cache/session-handler/d/monthly.png)](https://packagist.org/packages/cache/session-handler)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 
-This is a PHP session handler that supports PSR-6 cache. It is a part of the PHP Cache organisation. Find more 
-documentation at [www.php-cache.com](http://www.php-cache.com). 
+This is a PHP session handler that supports PSR-6 cache. It is a part of the PHP Cache organisation. Find more
+documentation at [www.php-cache.com](https://www.php-cache.com).
 
 
 ### Install
@@ -19,15 +19,18 @@ composer require cache/session-handler
 ### Use
 
 ```php
-$pool = new ArrayCachePool();
-$config = ['ttl'=>3600, 'prefix'=>'foobar'];
+$pool = new \Cache\Adapter\PHPArray\ArrayCachePool();
+$config = [
+    'ttl' => 3600,
+    'prefix' => 'foobar',
+];
 
-$sessionHandler = new Psr6SessionHandler($pool, $config);
+$sessionHandler = new \Cache\SessionHandler\Psr6SessionHandler($pool, $config);
 ```
 
 Note that this session handler does no kind of locking, so it will lose or overwrite your session data if you run scripts concurrently. You have been warned.
 
 ### Contribute
 
-Contributions are very welcome! Send a pull request to the [main repository](https://github.com/php-cache/cache) or 
+Contributions are very welcome! Send a pull request to the [main repository](https://github.com/php-cache/cache) or
 report any issues you find on the [issue tracker](http://issues.php-cache.com).

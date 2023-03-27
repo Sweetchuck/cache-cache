@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -12,7 +15,6 @@
 namespace Cache\Bridge\SimpleCache;
 
 use Cache\Bridge\SimpleCache\Exception\InvalidArgumentException;
-use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException as CacheInvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
@@ -24,14 +26,8 @@ use Psr\SimpleCache\CacheInterface;
  */
 class SimpleCacheBridge implements CacheInterface
 {
-    /**
-     * @type CacheItemPoolInterface
-     */
-    protected $cacheItemPool;
+    protected CacheItemPoolInterface $cacheItemPool;
 
-    /**
-     * SimpleCacheBridge constructor.
-     */
     public function __construct(CacheItemPoolInterface $cacheItemPool)
     {
         $this->cacheItemPool = $cacheItemPool;
@@ -40,7 +36,7 @@ class SimpleCacheBridge implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function get($key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         try {
             $item = $this->cacheItemPool->getItem($key);
@@ -58,7 +54,7 @@ class SimpleCacheBridge implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function set($key, $value, $ttl = null)
+    public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
     {
         try {
             $item = $this->cacheItemPool->getItem($key);
@@ -75,7 +71,7 @@ class SimpleCacheBridge implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function delete($key)
+    public function delete(string $key): bool
     {
         try {
             return $this->cacheItemPool->deleteItem($key);
@@ -87,7 +83,7 @@ class SimpleCacheBridge implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function clear()
+    public function clear(): bool
     {
         return $this->cacheItemPool->clear();
     }
@@ -95,7 +91,7 @@ class SimpleCacheBridge implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function getMultiple($keys, $default = null)
+    public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
         if (!is_array($keys)) {
             if (!$keys instanceof \Traversable) {
@@ -117,50 +113,31 @@ class SimpleCacheBridge implements CacheInterface
     }
 
     /**
-     * @param $default
-     * @param $items
+     * @param iterable<\Psr\Cache\CacheItemInterface> $items
      *
      * @return \Generator
      */
-    private function generateValues($default, $items)
+    private function generateValues(mixed $default, iterable $items)
     {
         foreach ($items as $key => $item) {
-            /** @type $item CacheItemInterface */
-            if (!$item->isHit()) {
-                yield $key => $default;
-            } else {
-                yield $key => $item->get();
-            }
+            yield $key => ($item->isHit() ? $item->get() : $default);
         }
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @phpstan-param array<string, mixed> $values
      */
-    public function setMultiple($values, $ttl = null)
+    public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
     {
-        if (!is_array($values)) {
-            if (!$values instanceof \Traversable) {
-                throw new InvalidArgumentException('$values is neither an array nor Traversable');
-            }
-        }
-
-        $keys        = [];
+        $keys = [];
         $arrayValues = [];
         foreach ($values as $key => $value) {
-            if (is_int($key)) {
-                $key = (string) $key;
-            }
+            static::assertKey($key);
+            settype($key, 'string');
 
-            if (!is_string($key)) {
-                throw new InvalidArgumentException(sprintf('Cache key must be string, "%s" given', gettype($key)));
-            }
-
-            if (preg_match('|[\{\}\(\)/\\\@\:]|', $key)) {
-                throw new InvalidArgumentException(sprintf('Invalid key: "%s". The key contains one or more characters reserved for future extension: {}()/\@:', $key));
-            }
-
-            $keys[]            = $key;
+            $keys[] = $key;
             $arrayValues[$key] = $value;
         }
 
@@ -173,7 +150,6 @@ class SimpleCacheBridge implements CacheInterface
         $itemSuccess = true;
 
         foreach ($items as $key => $item) {
-            /* @var $item CacheItemInterface */
             $item->set($arrayValues[$key]);
 
             try {
@@ -191,7 +167,7 @@ class SimpleCacheBridge implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function deleteMultiple($keys)
+    public function deleteMultiple(iterable $keys): bool
     {
         if (!is_array($keys)) {
             if (!$keys instanceof \Traversable) {
@@ -213,12 +189,39 @@ class SimpleCacheBridge implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function has($key)
+    public function has(string $key): bool
     {
         try {
             return $this->cacheItemPool->hasItem($key);
         } catch (CacheInvalidArgumentException $e) {
             throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    protected function assertKey(mixed $key): void
+    {
+        $type = gettype($key);
+        if (!in_array($type, ['integer', 'double', 'string'])) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid key: Type "%s" is not allowed for keys',
+                $type,
+            ));
+        }
+
+        $key = (string) $key;
+        if ($key === '') {
+            throw new InvalidArgumentException('Invalid key: Empty string is not allowed');
+        }
+
+        $reservedChars = '{}()/\@:';
+        $reservedCharsPattern = '/[' . preg_quote($reservedChars, '/') . ']/';
+
+        if (preg_match($reservedCharsPattern, $key)) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid key: "%s". The key contains one or more characters reserved for future extension: %s',
+                $key,
+                $reservedChars,
+            ));
         }
     }
 }

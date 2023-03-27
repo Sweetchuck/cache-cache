@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -18,10 +21,18 @@ class MemcachedCachePoolTest extends TestCase
     use CreatePoolTrait;
 
     /**
+     * @after
+     */
+    public function tearDownService(): void
+    {
+        $this->client?->quit();
+    }
+
+    /**
      * Ensures that items with a TTL larger than 30 days can be stored in memcached
      * https://github.com/memcached/memcached/wiki/Programming#expiration.
      */
-    public function testTimeToLiveMoreThan30days()
+    public function testTimeToLiveMoreThan30days(): void
     {
         $pool = $this->createCachePool();
 
@@ -30,6 +41,9 @@ class MemcachedCachePoolTest extends TestCase
         $item->expiresAfter(86400 * 365);
         $pool->save($item);
 
-        $this->assertTrue($pool->getItem('365days')->isHit(), 'Item is not stored correctly');
+        static::assertTrue(
+            $pool->getItem('365days')->isHit(),
+            'Item is not stored correctly',
+        );
     }
 }

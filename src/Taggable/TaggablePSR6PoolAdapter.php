@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -39,35 +42,23 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
 {
-    /**
-     * @type CacheItemPoolInterface
-     */
-    private $cachePool;
+    private CacheItemPoolInterface $cachePool;
 
-    /**
-     * @type CacheItemPoolInterface
-     */
-    private $tagStorePool;
+    private CacheItemPoolInterface $tagStorePool;
 
-    /**
-     * @param CacheItemPoolInterface $cachePool
-     * @param CacheItemPoolInterface $tagStorePool
-     */
-    private function __construct(CacheItemPoolInterface $cachePool, CacheItemPoolInterface $tagStorePool = null)
+    private function __construct(CacheItemPoolInterface $cachePool, ?CacheItemPoolInterface $tagStorePool = null)
     {
         $this->cachePool = $cachePool;
-        if ($tagStorePool) {
-            $this->tagStorePool = $tagStorePool;
-        } else {
-            $this->tagStorePool = $cachePool;
-        }
+        $this->tagStorePool = $tagStorePool ?: $cachePool;
     }
 
     /**
-     * @param CacheItemPoolInterface      $cachePool    The pool to which to add tagging capabilities
-     * @param CacheItemPoolInterface|null $tagStorePool The pool to store tags in. If null is passed, the main pool is used
+     * @param \Psr\Cache\CacheItemPoolInterface $cachePool
+     *   The pool to which to add tagging capabilities.
+     * @param null|\Psr\Cache\CacheItemPoolInterface $tagStorePool
+     *   The pool to store tags in. If null is passed, the main pool is used.
      *
-     * @return TaggableCacheItemPoolInterface
+     * @return \Cache\TagInterop\TaggableCacheItemPoolInterface
      */
     public static function makeTaggable(CacheItemPoolInterface $cachePool, CacheItemPoolInterface $tagStorePool = null)
     {
@@ -81,7 +72,7 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function getItem($key)
+    public function getItem(string $key): TaggableCacheItemInterface
     {
         return TaggablePSR6ItemAdapter::makeTaggable($this->cachePool->getItem($key));
     }
@@ -89,7 +80,7 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function getItems(array $keys = [])
+    public function getItems(array $keys = []): iterable
     {
         $items = $this->cachePool->getItems($keys);
 
@@ -104,7 +95,7 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function hasItem($key)
+    public function hasItem(string $key): bool
     {
         return $this->cachePool->hasItem($key);
     }
@@ -112,7 +103,7 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function clear()
+    public function clear(): bool
     {
         $ret = $this->cachePool->clear();
 
@@ -122,7 +113,7 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function deleteItem($key)
+    public function deleteItem(string $key): bool
     {
         $this->preRemoveItem($key);
 
@@ -132,7 +123,7 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function deleteItems(array $keys)
+    public function deleteItems(array $keys): bool
     {
         foreach ($keys as $key) {
             $this->preRemoveItem($key);
@@ -143,8 +134,10 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param \Cache\Taggable\TaggablePSR6ItemAdapter $item
      */
-    public function save(CacheItemInterface $item)
+    public function save(CacheItemInterface $item): bool
     {
         $this->removeTagEntries($item);
         $this->saveTags($item);
@@ -154,8 +147,10 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param \Cache\Taggable\TaggablePSR6ItemAdapter $item
      */
-    public function saveDeferred(CacheItemInterface $item)
+    public function saveDeferred(CacheItemInterface $item): bool
     {
         $this->saveTags($item);
 
@@ -165,16 +160,13 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function commit()
+    public function commit(): bool
     {
-        $this->tagStorePool->commit();
-        $this->cachePool->commit();
+        return $this->tagStorePool->commit()
+            && $this->cachePool->commit();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function appendListItem($name, $value)
+    protected function appendListItem(string $name, string $value): void
     {
         $listItem = $this->tagStorePool->getItem($name);
         if (!is_array($list = $listItem->get())) {
@@ -186,18 +178,12 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
         $this->tagStorePool->save($listItem);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function removeList($name)
+    protected function removeList(string $name): bool
     {
         return $this->tagStorePool->deleteItem($name);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function removeListItem($name, $key)
+    protected function removeListItem(string $name, string $key): void
     {
         $listItem = $this->tagStorePool->getItem($name);
         if (!is_array($list = $listItem->get())) {
@@ -213,32 +199,24 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return string[]
      */
-    protected function getList($name)
+    protected function getList(string $name): array
     {
         $listItem = $this->tagStorePool->getItem($name);
-        if (!is_array($list = $listItem->get())) {
-            $list = [];
-        }
+        $list = $listItem->get();
 
-        return $list;
+        return is_array($list) ?
+            $list
+            : [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function getTagKey($tag)
+    protected function getTagKey(string $tag): string
     {
         return '__tag.'.$tag;
     }
 
-    /**
-     * @param TaggablePSR6ItemAdapter $item
-     *
-     * @return $this
-     */
-    private function saveTags(TaggablePSR6ItemAdapter $item)
+    private function saveTags(TaggablePSR6ItemAdapter $item): static
     {
         $tags = $item->getTags();
         foreach ($tags as $tag) {
@@ -251,14 +229,14 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function invalidateTags(array $tags)
+    public function invalidateTags(array $tags): bool
     {
         $itemIds = [];
         foreach ($tags as $tag) {
             $itemIds = array_merge($itemIds, $this->getList($this->getTagKey($tag)));
         }
 
-        // Remove all items with the tag
+        // Remove all items with the tag.
         $success = $this->deleteItems($itemIds);
 
         if ($success) {
@@ -274,19 +252,15 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function invalidateTag($tag)
+    public function invalidateTag(string $tag): bool
     {
         return $this->invalidateTags([$tag]);
     }
 
     /**
      * Removes the key form all tag lists.
-     *
-     * @param string $key
-     *
-     * @return $this
      */
-    private function preRemoveItem($key)
+    private function preRemoveItem(string $key): static
     {
         $item = $this->getItem($key);
         $this->removeTagEntries($item);
@@ -294,14 +268,13 @@ class TaggablePSR6PoolAdapter implements TaggableCacheItemPoolInterface
         return $this;
     }
 
-    /**
-     * @param TaggableCacheItemInterface $item
-     */
-    private function removeTagEntries($item)
+    private function removeTagEntries(\Cache\TagInterop\TaggableCacheItemInterface $item): static
     {
         $tags = $item->getPreviousTags();
         foreach ($tags as $tag) {
             $this->removeListItem($this->getTagKey($tag), $item->getKey());
         }
+
+        return $this;
     }
 }

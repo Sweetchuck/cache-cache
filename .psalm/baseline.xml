@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.9.0@8b9ad1eb9e8b7d3101f949291da2b9f7767cd163">
+  <file src="src/Adapter/Apcu/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Apcu/Tests/IntegrationSimpleCachelTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCachelTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Apcu/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Chain/Tests/CachePoolChainTest.php">
+    <UnusedClass>
+      <code>CachePoolChainTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Chain/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Chain/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Common/AbstractCachePool.php">
+    <PossiblyUnusedReturnValue>
+      <code>bool</code>
+      <code>bool</code>
+      <code>bool</code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="src/Adapter/Common/CacheItem.php">
+    <PossiblyUnusedMethod>
+      <code>moveTagsToPrevious</code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Adapter/Common/Tests/CacheItemTest.php">
+    <UnusedClass>
+      <code>CacheItemTest</code>
+    </UnusedClass>
+    <UnusedMethodCall>
+      <code>setAccessible</code>
+      <code>setAccessible</code>
+      <code>setAccessible</code>
+    </UnusedMethodCall>
+  </file>
+  <file src="src/Adapter/Doctrine/Tests/DoctrineAdapterTest.php">
+    <UnusedClass>
+      <code>DoctrineAdapterTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Doctrine/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Doctrine/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Doctrine/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Filesystem/Tests/FilesystemCachePoolTest.php">
+    <UnusedClass>
+      <code>FilesystemCachePoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Filesystem/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Filesystem/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Filesystem/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Illuminate/Tests/IlluminateAdapterTest.php">
+    <UnusedClass>
+      <code>IlluminateAdapterTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Illuminate/Tests/IntegrationHierarchyTest.php">
+    <UnusedClass>
+      <code>IntegrationHierarchyTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Illuminate/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Illuminate/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Illuminate/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Memcache/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Memcache/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Memcache/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Memcached/Tests/IntegrationHierarchyTest.php">
+    <UnusedClass>
+      <code>IntegrationHierarchyTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Memcached/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Memcached/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Memcached/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Memcached/Tests/MemcachedCachePoolTest.php">
+    <UnusedClass>
+      <code>MemcachedCachePoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/MongoDB/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/MongoDB/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/MongoDB/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/PHPArray/ArrayCachePool.php">
+    <PossiblyUnusedMethod>
+      <code>getItemWithoutGenerateCacheKey</code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code>$cache</code>
+      <code>$pathKey</code>
+    </PossiblyUnusedParam>
+  </file>
+  <file src="src/Adapter/PHPArray/Tests/ArrayCachePoolTest.php">
+    <UnusedClass>
+      <code>ArrayCachePoolTest</code>
+    </UnusedClass>
+    <UnusedMethodCall>
+      <code>setAccessible</code>
+    </UnusedMethodCall>
+  </file>
+  <file src="src/Adapter/PHPArray/Tests/IntegrationHierarchicalTest.php">
+    <UnusedClass>
+      <code>IntegrationHierarchicalTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/PHPArray/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/PHPArray/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/PHPArray/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Predis/Tests/IntegrationHierarchyTest.php">
+    <UnusedClass>
+      <code>IntegrationHierarchyTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Predis/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Predis/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Predis/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/ArrayIntegrationHierarchyTest.php">
+    <UnusedClass>
+      <code>ArrayIntegrationHierarchyTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/ArrayIntegrationPoolTest.php">
+    <UnusedClass>
+      <code>ArrayIntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/ArrayIntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>ArrayIntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/ArrayIntegrationTagTest.php">
+    <UnusedClass>
+      <code>ArrayIntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/ClusterIntegrationHierarchyTest.php">
+    <UnusedClass>
+      <code>ClusterIntegrationHierarchyTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/ClusterIntegrationPoolTest.php">
+    <UnusedClass>
+      <code>ClusterIntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/ClusterIntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>ClusterIntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/ClusterIntegrationTagTest.php">
+    <UnusedClass>
+      <code>ClusterIntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/IntegrationHierarchyTest.php">
+    <UnusedClass>
+      <code>IntegrationHierarchyTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Redis/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Void/Tests/IntegrationHierarchyTest.php">
+    <UnusedClass>
+      <code>IntegrationHierarchyTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Void/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Void/Tests/IntegrationSimpleCacheTest.php">
+    <UnusedClass>
+      <code>IntegrationSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Void/Tests/IntegrationTagTest.php">
+    <UnusedClass>
+      <code>IntegrationTagTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Adapter/Void/VoidCachePool.php">
+    <PossiblyUnusedMethod>
+      <code>clearTags</code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedParam>
+      <code>$tags</code>
+    </PossiblyUnusedParam>
+  </file>
+  <file src="src/Bridge/Doctrine/Tests/DoctrineCacheBridgeTest.php">
+    <UnusedClass>
+      <code>DoctrineCacheBridgeTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Bridge/SimpleCache/Tests/IntegrationTest.php">
+    <UnusedClass>
+      <code>IntegrationTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Bridge/SimpleCache/Tests/SimpleCacheBridgeTest.php">
+    <UnusedClass>
+      <code>SimpleCacheBridgeTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Encryption/Tests/IntegrationPoolTest.php">
+    <UnusedClass>
+      <code>IntegrationPoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Hierarchy/Tests/HierarchicalCachePoolTest.php">
+    <UnusedClass>
+      <code>HierarchicalCachePoolTest</code>
+    </UnusedClass>
+    <UnusedMethodCall>
+      <code>setAccessible</code>
+      <code>setAccessible</code>
+      <code>setAccessible</code>
+      <code>setAccessible</code>
+    </UnusedMethodCall>
+  </file>
+  <file src="src/Namespaced/Tests/IntegrationTest.php">
+    <UnusedClass>
+      <code>IntegrationTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Namespaced/Tests/NamespacedCachePoolTest.php">
+    <UnusedClass>
+      <code>NamespacedCachePoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Prefixed/Tests/PrefixedCachePoolTest.php">
+    <UnusedClass>
+      <code>PrefixedCachePoolTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Prefixed/Tests/PrefixedSimpleCacheTest.php">
+    <UnusedClass>
+      <code>PrefixedSimpleCacheTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/SessionHandler/Tests/AbstractSessionHandlerTestBase.php">
+    <PossiblyUnusedMethod>
+      <code>testClose</code>
+      <code>testGc</code>
+      <code>testOpen</code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/SessionHandler/Tests/Psr16SessionHandlerTest.php">
+    <UnusedClass>
+      <code>Psr16SessionHandlerTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/SessionHandler/Tests/Psr6SessionHandlerTest.php">
+    <UnusedClass>
+      <code>Psr6SessionHandlerTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Taggable/TaggablePSR6PoolAdapter.php">
+    <PossiblyUnusedReturnValue>
+      <code>bool</code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="src/Taggable/Tests/SameTagPoolTaggablePSR6AdapterTest.php">
+    <UnusedClass>
+      <code>SameTagPoolTaggablePSR6AdapterTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Taggable/Tests/SeparateTagPoolPSR6AdapterTest.php">
+    <UnusedClass>
+      <code>SeparateTagPoolPSR6AdapterTest</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Util/Tests/SimpleCacheUtilTest.php">
+    <UnusedClass>
+      <code>SimpleCacheUtilTest</code>
+    </UnusedClass>
+  </file>
+</files>

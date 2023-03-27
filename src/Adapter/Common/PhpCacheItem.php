@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -26,7 +29,7 @@ interface PhpCacheItem extends HasExpirationTimestampInterface, TaggableCacheIte
      * WARNING: This is generally not the function you want to use. Please see
      * `getPreviousTags`.
      *
-     * @return array
+     * @return array<string>
      */
-    public function getTags();
+    public function getTags(): array;
 }

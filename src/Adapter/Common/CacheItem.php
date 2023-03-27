@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -12,7 +15,6 @@
 namespace Cache\Adapter\Common;
 
 use Cache\Adapter\Common\Exception\InvalidArgumentException;
-use Cache\TagInterop\TaggableCacheItemInterface;
 
 /**
  * @author Aaron Scherer <aequasi@gmail.com>
@@ -21,57 +23,47 @@ use Cache\TagInterop\TaggableCacheItemInterface;
 class CacheItem implements PhpCacheItem
 {
     /**
-     * @type array
+     * @var array<string>
      */
-    private $prevTags = [];
+    private array $prevTags = [];
 
     /**
-     * @type array
+     * @var array<string>
      */
-    private $tags = [];
+    private array $tags = [];
 
-    /**
-     * @type \Closure
-     */
-    private $callable;
+    private ?\Closure $callable = null;
 
-    /**
-     * @type string
-     */
-    private $key;
+    private string $key = '';
 
-    /**
-     * @type mixed
-     */
-    private $value;
+    private bool $hasValue = false;
+
+    private mixed $value = null;
 
     /**
      * The expiration timestamp is the source of truth. This is the UTC timestamp
      * when the cache item expire. A value of zero means it never expires. A nullvalue
      * means that no expiration is set.
-     *
-     * @type int|null
      */
-    private $expirationTimestamp = null;
+    private ?int $expirationTimestamp = null;
+
+    protected string $reservedChars = '{}()/\\@:';
+
+    protected string $reservedCharsPattern = '';
 
     /**
-     * @type bool
+     * @param null|bool|\Closure $callable
+     *   Value for ::$callable or ::$hasValue.
      */
-    private $hasValue = false;
-
-    /**
-     * @param string        $key
-     * @param \Closure|bool $callable or boolean hasValue
-     */
-    public function __construct($key, $callable = null, $value = null)
+    public function __construct(string $key, null|bool|\Closure $callable = null, mixed $value = null)
     {
         $this->key = $key;
+        $this->reservedCharsPattern = '/[' . preg_quote($this->reservedChars, '/') . ']/';
 
         if ($callable === true) {
             $this->hasValue = true;
-            $this->value    = $value;
+            $this->value = $value;
         } elseif ($callable !== false) {
-            // This must be a callable or null
             $this->callable = $callable;
         }
     }
@@ -79,7 +71,7 @@ class CacheItem implements PhpCacheItem
     /**
      * {@inheritdoc}
      */
-    public function getKey()
+    public function getKey(): string
     {
         return $this->key;
     }
@@ -87,7 +79,7 @@ class CacheItem implements PhpCacheItem
     /**
      * {@inheritdoc}
      */
-    public function set($value)
+    public function set(mixed $value): static
     {
         $this->value    = $value;
         $this->hasValue = true;
@@ -99,19 +91,17 @@ class CacheItem implements PhpCacheItem
     /**
      * {@inheritdoc}
      */
-    public function get()
+    public function get(): mixed
     {
-        if (!$this->isHit()) {
-            return;
-        }
-
-        return $this->value;
+        return $this->isHit() ?
+            $this->value
+            : null;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function isHit()
+    public function isHit(): bool
     {
         $this->initialize();
 
@@ -129,7 +119,7 @@ class CacheItem implements PhpCacheItem
     /**
      * {@inheritdoc}
      */
-    public function getExpirationTimestamp()
+    public function getExpirationTimestamp(): ?int
     {
         return $this->expirationTimestamp;
     }
@@ -137,15 +127,9 @@ class CacheItem implements PhpCacheItem
     /**
      * {@inheritdoc}
      */
-    public function expiresAt($expiration)
+    public function expiresAt(?\DateTimeInterface $expiration): static
     {
-        if ($expiration instanceof \DateTimeInterface) {
-            $this->expirationTimestamp = $expiration->getTimestamp();
-        } elseif (is_int($expiration) || null === $expiration) {
-            $this->expirationTimestamp = $expiration;
-        } else {
-            throw new InvalidArgumentException('Cache item ttl/expiresAt must be of type integer or \DateTimeInterface.');
-        }
+        $this->expirationTimestamp = $expiration?->getTimestamp();
 
         return $this;
     }
@@ -153,18 +137,16 @@ class CacheItem implements PhpCacheItem
     /**
      * {@inheritdoc}
      */
-    public function expiresAfter($time)
+    public function expiresAfter(int|\DateInterval|null $time): static
     {
-        if ($time === null) {
-            $this->expirationTimestamp = null;
+        if (is_int($time)) {
+            $this->expirationTimestamp = time() + $time;
         } elseif ($time instanceof \DateInterval) {
             $date = new \DateTime();
             $date->add($time);
             $this->expirationTimestamp = $date->getTimestamp();
-        } elseif (is_int($time)) {
-            $this->expirationTimestamp = time() + $time;
         } else {
-            throw new InvalidArgumentException('Cache item ttl/expiresAfter must be of type integer or \DateInterval.');
+            $this->expirationTimestamp = null;
         }
 
         return $this;
@@ -173,7 +155,7 @@ class CacheItem implements PhpCacheItem
     /**
      * {@inheritdoc}
      */
-    public function getPreviousTags()
+    public function getPreviousTags(): array
     {
         $this->initialize();
 
@@ -183,7 +165,7 @@ class CacheItem implements PhpCacheItem
     /**
      * {@inheritdoc}
      */
-    public function getTags()
+    public function getTags(): array
     {
         return $this->tags;
     }
@@ -191,7 +173,7 @@ class CacheItem implements PhpCacheItem
     /**
      * {@inheritdoc}
      */
-    public function setTags(array $tags)
+    public function setTags(iterable $tags): static
     {
         $this->tags = [];
         $this->tag($tags);
@@ -202,32 +184,42 @@ class CacheItem implements PhpCacheItem
     /**
      * Adds a tag to a cache item.
      *
-     * @param string|string[] $tags A tag or array of tags
+     * @phpstan-param string|iterable<string> $tags A tag or array of tags
      *
      * @throws InvalidArgumentException When $tag is not valid.
-     *
-     * @return TaggableCacheItemInterface
      */
-    private function tag($tags)
+    private function tag(string|iterable $tags): static
     {
         $this->initialize();
 
-        if (!is_array($tags)) {
+        if (is_string($tags)) {
             $tags = [$tags];
         }
+
         foreach ($tags as $tag) {
             if (!is_string($tag)) {
-                throw new InvalidArgumentException(sprintf('Cache tag must be string, "%s" given', is_object($tag) ? get_class($tag) : gettype($tag)));
+                throw new InvalidArgumentException(sprintf(
+                    'Cache tag must be string, "%s" given',
+                    is_object($tag) ? get_class($tag) : gettype($tag),
+                ));
             }
+
             if (isset($this->tags[$tag])) {
                 continue;
             }
-            if (!isset($tag[0])) {
+
+            if (strlen($tag) === 0) {
                 throw new InvalidArgumentException('Cache tag length must be greater than zero');
             }
-            if (isset($tag[strcspn($tag, '{}()/\@:')])) {
-                throw new InvalidArgumentException(sprintf('Cache tag "%s" contains reserved characters {}()/\@:', $tag));
+
+            if (preg_match($this->reservedCharsPattern, $tag) === 1) {
+                throw new InvalidArgumentException(sprintf(
+                    'Cache tag "%s" contains reserved characters %s',
+                    $tag,
+                    $this->reservedChars,
+                ));
             }
+
             $this->tags[$tag] = $tag;
         }
 
@@ -237,15 +229,15 @@ class CacheItem implements PhpCacheItem
     /**
      * If callable is not null, execute it an populate this object with values.
      */
-    private function initialize()
+    private function initialize(): void
     {
-        if ($this->callable !== null) {
+        if ($this->callable) {
             // $func will be $adapter->fetchObjectFromCache();
-            $func                      = $this->callable;
-            $result                    = $func();
-            $this->hasValue            = $result[0];
-            $this->value               = $result[1];
-            $this->prevTags            = isset($result[2]) ? $result[2] : [];
+            $func = $this->callable;
+            $result = $func();
+            $this->hasValue = $result[0];
+            $this->value = $result[1];
+            $this->prevTags = $result[2] ?? [];
             $this->expirationTimestamp = null;
 
             if (isset($result[3]) && is_int($result[3])) {
@@ -260,10 +252,12 @@ class CacheItem implements PhpCacheItem
      * @internal This function should never be used and considered private.
      *
      * Move tags from $tags to $prevTags
+     *
+     * @return void
      */
     public function moveTagsToPrevious()
     {
         $this->prevTags = $this->tags;
-        $this->tags     = [];
+        $this->tags = [];
     }
 }

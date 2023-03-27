@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -27,13 +30,10 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     use HierarchicalCachePoolTrait;
 
     /**
-     * @type Store
+     * @var Store
      */
     protected $store;
 
-    /**
-     * @param Store $store
-     */
     public function __construct(Store $store)
     {
         $this->store = $store;
@@ -42,7 +42,7 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     /**
      * {@inheritdoc}
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    protected function storeItemInCache(PhpCacheItem $item, ?int $ttl): bool
     {
         $ttl = null === $ttl ? 0 : $ttl / 60;
 
@@ -56,7 +56,7 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     /**
      * {@inheritdoc}
      */
-    protected function fetchObjectFromCache($key)
+    protected function fetchObjectFromCache(string $key): array
     {
         if (null === $data = $this->store->get($this->getHierarchyKey($key))) {
             return [false, null, [], null];
@@ -68,7 +68,7 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     /**
      * {@inheritdoc}
      */
-    protected function clearAllObjectsFromCache()
+    protected function clearAllObjectsFromCache(): bool
     {
         return $this->store->flush();
     }
@@ -76,7 +76,7 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     /**
      * {@inheritdoc}
      */
-    protected function clearOneObjectFromCache($key)
+    protected function clearOneObjectFromCache(string $key): bool
     {
         $path      = null;
         $keyString = $this->getHierarchyKey($key, $path);
@@ -94,7 +94,7 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     /**
      * {@inheritdoc}
      */
-    protected function getList($name)
+    protected function getList(string $name): array
     {
         $list = $this->store->get($name);
 
@@ -108,7 +108,7 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     /**
      * {@inheritdoc}
      */
-    protected function removeList($name)
+    protected function removeList(string $name): bool
     {
         return $this->store->forget($name);
     }
@@ -116,7 +116,7 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     /**
      * {@inheritdoc}
      */
-    protected function appendListItem($name, $key)
+    protected function appendListItem(string $name, string $key)
     {
         $list   = $this->getList($name);
         $list[] = $key;
@@ -127,7 +127,7 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     /**
      * {@inheritdoc}
      */
-    protected function removeListItem($name, $key)
+    protected function removeListItem(string $name, string $key)
     {
         $list = $this->getList($name);
 
@@ -143,7 +143,7 @@ class IlluminateCachePool extends AbstractCachePool implements HierarchicalPoolI
     /**
      * {@inheritdoc}
      */
-    public function getDirectValue($name)
+    public function getDirectValue(string $name): mixed
     {
         return $this->store->get($name);
     }

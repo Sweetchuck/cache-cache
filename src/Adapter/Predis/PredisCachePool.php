@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -24,14 +27,8 @@ class PredisCachePool extends AbstractCachePool implements HierarchicalPoolInter
 {
     use HierarchicalCachePoolTrait;
 
-    /**
-     * @type Client
-     */
-    protected $cache;
+    protected \Predis\ClientInterface $cache;
 
-    /**
-     * @param Client $cache
-     */
     public function __construct(Client $cache)
     {
         $this->cache = $cache;
@@ -40,19 +37,24 @@ class PredisCachePool extends AbstractCachePool implements HierarchicalPoolInter
     /**
      * {@inheritdoc}
      */
-    protected function fetchObjectFromCache($key)
+    protected function fetchObjectFromCache(string $key): array
     {
-        if (false === $result = unserialize($this->cache->get($this->getHierarchyKey($key)))) {
+        $raw = $this->cache->get($this->getHierarchyKey($key));
+        if (null === $raw) {
             return [false, null, [], null];
         }
 
-        return $result;
+        $result = unserialize($raw);
+
+        return false === $result ?
+            [false, null, [], null]
+            : $result;
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function clearAllObjectsFromCache()
+    protected function clearAllObjectsFromCache(): bool
     {
         return 'OK' === $this->cache->flushdb()->getPayload();
     }
@@ -60,7 +62,7 @@ class PredisCachePool extends AbstractCachePool implements HierarchicalPoolInter
     /**
      * {@inheritdoc}
      */
-    protected function clearOneObjectFromCache($key)
+    protected function clearOneObjectFromCache(string $key): bool
     {
         $path      = null;
         $keyString = $this->getHierarchyKey($key, $path);
@@ -75,7 +77,7 @@ class PredisCachePool extends AbstractCachePool implements HierarchicalPoolInter
     /**
      * {@inheritdoc}
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    protected function storeItemInCache(PhpCacheItem $item, ?int $ttl): bool
     {
         if ($ttl < 0) {
             return false;
@@ -94,7 +96,7 @@ class PredisCachePool extends AbstractCachePool implements HierarchicalPoolInter
     /**
      * {@inheritdoc}
      */
-    protected function getDirectValue($key)
+    protected function getDirectValue(string $key): mixed
     {
         return $this->cache->get($key);
     }
@@ -102,15 +104,15 @@ class PredisCachePool extends AbstractCachePool implements HierarchicalPoolInter
     /**
      * {@inheritdoc}
      */
-    protected function appendListItem($name, $value)
+    protected function appendListItem(string $name, string $key)
     {
-        $this->cache->lpush($name, $value);
+        $this->cache->lpush($name, [$key]);
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function getList($name)
+    protected function getList(string $name): array
     {
         return $this->cache->lrange($name, 0, -1);
     }
@@ -118,16 +120,16 @@ class PredisCachePool extends AbstractCachePool implements HierarchicalPoolInter
     /**
      * {@inheritdoc}
      */
-    protected function removeList($name)
+    protected function removeList(string $name): bool
     {
-        return $this->cache->del($name);
+        return $this->cache->del($name) >= 0;
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function removeListItem($name, $key)
+    protected function removeListItem(string $name, string $key)
     {
-        return $this->cache->lrem($name, 0, $key);
+        $this->cache->lrem($name, 0, $key);
     }
 }

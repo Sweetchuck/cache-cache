@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -27,46 +30,36 @@ class EncryptedItemDecorator implements TaggableCacheItemInterface
 
     /**
      * The cacheItem should always contain encrypted data.
-     *
-     * @type TaggableCacheItemInterface
      */
-    private $cacheItem;
+    private TaggableCacheItemInterface $cacheItem;
 
-    /**
-     * @type Key
-     */
-    private $key;
+    private Key $key;
 
-    /**
-     * @param TaggableCacheItemInterface $cacheItem
-     * @param Key                        $key
-     */
     public function __construct(TaggableCacheItemInterface $cacheItem, Key $key)
     {
         $this->cacheItem = $cacheItem;
-        $this->key       = $key;
+        $this->key = $key;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getKey()
+    public function getKey(): string
     {
         return $this->cacheItem->getKey();
     }
 
-    /**
-     * @return TaggableCacheItemInterface
-     */
-    public function getCacheItem()
+    public function getCacheItem(): TaggableCacheItemInterface
     {
         return $this->cacheItem;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \Defuse\Crypto\Exception\EnvironmentIsBrokenException
      */
-    public function set($value)
+    public function set(mixed $value): static
     {
         $type = gettype($value);
 
@@ -74,7 +67,17 @@ class EncryptedItemDecorator implements TaggableCacheItemInterface
             $value = serialize($value);
         }
 
-        $json = json_encode(['type' => $type, 'value' => static::jsonArmor($value)]);
+        $json = json_encode([
+            'type' => $type,
+            'value' => is_string($value) ?
+                static::jsonArmor($value)
+                : $value,
+        ]);
+
+        if (!$json) {
+            // @todo Error handling.
+            return $this;
+        }
 
         $this->cacheItem->set(Crypto::encrypt($json, $this->key));
 
@@ -84,13 +87,16 @@ class EncryptedItemDecorator implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function get()
+    public function get(): mixed
     {
         if (!$this->isHit()) {
-            return;
+            return null;
         }
 
-        $item = json_decode(Crypto::decrypt($this->cacheItem->get(), $this->key), true);
+        $item = json_decode(
+            Crypto::decrypt($this->cacheItem->get(), $this->key),
+            true,
+        );
 
         return $this->transform($item);
     }
@@ -98,7 +104,7 @@ class EncryptedItemDecorator implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function isHit()
+    public function isHit(): bool
     {
         return $this->cacheItem->isHit();
     }
@@ -106,7 +112,7 @@ class EncryptedItemDecorator implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function expiresAt($expiration)
+    public function expiresAt(?\DateTimeInterface $expiration): static
     {
         $this->cacheItem->expiresAt($expiration);
 
@@ -116,7 +122,7 @@ class EncryptedItemDecorator implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function expiresAfter($time)
+    public function expiresAfter(int|\DateInterval|null $time): static
     {
         $this->cacheItem->expiresAfter($time);
 
@@ -126,7 +132,7 @@ class EncryptedItemDecorator implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function getPreviousTags()
+    public function getPreviousTags(): array
     {
         return $this->cacheItem->getPreviousTags();
     }
@@ -134,7 +140,7 @@ class EncryptedItemDecorator implements TaggableCacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function setTags(array $tags)
+    public function setTags(iterable $tags): static
     {
         $this->cacheItem->setTags($tags);
 
@@ -152,13 +158,13 @@ class EncryptedItemDecorator implements TaggableCacheItemInterface
     /**
      * Transform value back to it original type.
      *
-     * @param array $item
-     *
-     * @return mixed
+     * @phpstan-param cache-encrypted-item-raw $item
      */
-    private function transform(array $item)
+    private function transform(array $item): mixed
     {
-        $value = static::jsonDeArmor($item['value']);
+        $value = is_string($item['value']) ?
+            static::jsonDeArmor($item['value'])
+            : $item['value'];
 
         if ($item['type'] === 'object' || $item['type'] === 'array') {
             return unserialize($value);

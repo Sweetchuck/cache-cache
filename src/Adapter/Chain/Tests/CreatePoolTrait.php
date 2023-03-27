@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -21,17 +24,24 @@ use League\Flysystem\Filesystem;
  */
 trait CreatePoolTrait
 {
-    private $adapters;
 
     /**
-     * @return mixed
+     * @var null|array<\Cache\Adapter\Common\PhpCachePool&\Psr\Cache\CacheItemPoolInterface>
      */
-    public function getAdapters()
+    private ?array $adapters = null;
+
+    /**
+     * @return array<\Cache\Adapter\Common\PhpCachePool&\Psr\Cache\CacheItemPoolInterface>
+     */
+    public function getAdapters(): array
     {
         if ($this->adapters === null) {
             $filesystemAdapter = new Local(sys_get_temp_dir().'/cache_'.rand(1, 1000));
-            $filesystem        = new Filesystem($filesystemAdapter);
-            $this->adapters    = [new FilesystemCachePool($filesystem), new ArrayCachePool()];
+            $filesystem = new Filesystem($filesystemAdapter);
+            $this->adapters = [
+                new FilesystemCachePool($filesystem),
+                new ArrayCachePool(),
+            ];
         }
 
         return $this->adapters;

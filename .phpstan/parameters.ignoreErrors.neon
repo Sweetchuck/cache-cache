@@ -1,0 +1,136 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Cannot access offset 'test_key' on iterable\\<string, Psr\\\\Cache\\\\CacheItemInterface\\>\\.$#"
+			count: 2
+			path: ../src/Adapter/Chain/Tests/CachePoolChainTest.php
+
+		-
+			message: "#^Cannot access offset 'test_key2' on iterable\\<string, Psr\\\\Cache\\\\CacheItemInterface\\>\\.$#"
+			count: 2
+			path: ../src/Adapter/Chain/Tests/CachePoolChainTest.php
+
+		-
+			message: "#^Parameter \\#2 \\$array of static method PHPUnit\\\\Framework\\\\Assert\\:\\:assertArrayHasKey\\(\\) expects array\\|ArrayAccess, iterable\\<string, Psr\\\\Cache\\\\CacheItemInterface\\> given\\.$#"
+			count: 4
+			path: ../src/Adapter/Chain/Tests/CachePoolChainTest.php
+
+		-
+			message: "#^Call to an undefined method Cache\\\\TagInterop\\\\TaggableCacheItemInterface\\:\\:moveTagsToPrevious\\(\\)\\.$#"
+			count: 1
+			path: ../src/Adapter/Common/AbstractCachePool.php
+
+		-
+			message: "#^Method Cache\\\\Adapter\\\\Common\\\\AbstractCachePool\\:\\:getItem\\(\\) should return Cache\\\\Adapter\\\\Common\\\\PhpCacheItem but returns Cache\\\\TagInterop\\\\TaggableCacheItemInterface\\.$#"
+			count: 1
+			path: ../src/Adapter/Common/AbstractCachePool.php
+
+		-
+			message: "#^Else branch is unreachable because ternary operator condition is always true\\.$#"
+			count: 1
+			path: ../src/Adapter/Common/CacheItem.php
+
+		-
+			message: "#^Method Cache\\\\Adapter\\\\Common\\\\PhpCachePool\\:\\:getItems\\(\\) has invalid return type iterable\\.$#"
+			count: 1
+			path: ../src/Adapter/Common/PhpCachePool.php
+
+		-
+			message: "#^Method Cache\\\\Adapter\\\\Common\\\\PhpCachePool\\:\\:getItems\\(\\) return type has no value type specified in iterable type iterable\\.$#"
+			count: 1
+			path: ../src/Adapter/Common/PhpCachePool.php
+
+		-
+			message: "#^PHPDoc tag @return with type iterable\\<string, Cache\\\\Adapter\\\\Common\\\\PhpCacheItem\\> is not subtype of native type iterable\\.$#"
+			count: 1
+			path: ../src/Adapter/Common/PhpCachePool.php
+
+		-
+			message: "#^Property Cache\\\\Adapter\\\\Doctrine\\\\Tests\\\\DoctrineAdapterTest\\:\\:\\$mockItem is never read, only written\\.$#"
+			count: 1
+			path: ../src/Adapter/Doctrine/Tests/DoctrineAdapterTest.php
+
+		-
+			message: "#^Property Cache\\\\Adapter\\\\Illuminate\\\\Tests\\\\IlluminateAdapterTest\\:\\:\\$mockItem is never read, only written\\.$#"
+			count: 1
+			path: ../src/Adapter/Illuminate/Tests/IlluminateAdapterTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$data of function unserialize expects string, array\\|string given\\.$#"
+			count: 1
+			path: ../src/Adapter/Memcache/MemcacheCachePool.php
+
+		-
+			message: "#^Access to an undefined property object\\:\\:\\$expirationTimestamp\\.$#"
+			count: 1
+			path: ../src/Adapter/MongoDB/MongoDBCachePool.php
+
+		-
+			message: "#^Access to an undefined property object\\:\\:\\$tags\\.$#"
+			count: 1
+			path: ../src/Adapter/MongoDB/MongoDBCachePool.php
+
+		-
+			message: "#^Unsafe access to private property Cache\\\\Adapter\\\\MongoDB\\\\MongoDBCachePool\\:\\:\\$ENCODED_JSON_CHARACTERS through static\\:\\:\\.$#"
+			count: 2
+			path: ../src/Adapter/MongoDB/MongoDBCachePool.php
+
+		-
+			message: "#^Unsafe access to private property Cache\\\\Adapter\\\\MongoDB\\\\MongoDBCachePool\\:\\:\\$ESCAPE_JSON_CHARACTERS through static\\:\\:\\.$#"
+			count: 2
+			path: ../src/Adapter/MongoDB/MongoDBCachePool.php
+
+		-
+			message: "#^Call to an undefined method Cache\\\\TagInterop\\\\TaggableCacheItemInterface\\:\\:getExpirationTimestamp\\(\\)\\.$#"
+			count: 1
+			path: ../src/Adapter/PHPArray/ArrayCachePool.php
+
+		-
+			message: "#^Call to an undefined method Cache\\\\TagInterop\\\\TaggableCacheItemInterface\\:\\:getTags\\(\\)\\.$#"
+			count: 1
+			path: ../src/Adapter/PHPArray/ArrayCachePool.php
+
+		-
+			message: "#^Call to an undefined method Cache\\\\TagInterop\\\\TaggableCacheItemInterface\\:\\:moveTagsToPrevious\\(\\)\\.$#"
+			count: 1
+			path: ../src/Adapter/PHPArray/ArrayCachePool.php
+
+		-
+			message: "#^Negated boolean expression is always false\\.$#"
+			count: 1
+			path: ../src/Adapter/PHPArray/ArrayCachePool.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 2
+			path: ../src/Adapter/PHPArray/ArrayCachePool.php
+
+		-
+			message: "#^Unsafe access to private property Cache\\\\Encryption\\\\EncryptedItemDecorator\\:\\:\\$ENCODED_JSON_CHARACTERS through static\\:\\:\\.$#"
+			count: 2
+			path: ../src/Encryption/EncryptedItemDecorator.php
+
+		-
+			message: "#^Unsafe access to private property Cache\\\\Encryption\\\\EncryptedItemDecorator\\:\\:\\$ESCAPE_JSON_CHARACTERS through static\\:\\:\\.$#"
+			count: 2
+			path: ../src/Encryption/EncryptedItemDecorator.php
+
+		-
+			message: "#^Parameter \\#1 \\$array of function array_keys expects array, iterable\\<string, Psr\\\\Cache\\\\CacheItemInterface\\> given\\.$#"
+			count: 1
+			path: ../src/Namespaced/Tests/NamespacedCachePoolTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$array of function array_keys expects array, iterable\\<string, Psr\\\\Cache\\\\CacheItemInterface\\> given\\.$#"
+			count: 1
+			path: ../src/Prefixed/Tests/PrefixedCachePoolTest.php
+
+		-
+			message: "#^Method Cache\\\\Taggable\\\\TaggablePSR6ItemAdapter\\:\\:makeTaggable\\(\\) should return static\\(Cache\\\\Taggable\\\\TaggablePSR6ItemAdapter\\) but returns Cache\\\\Taggable\\\\TaggablePSR6ItemAdapter\\.$#"
+			count: 1
+			path: ../src/Taggable/TaggablePSR6ItemAdapter.php
+
+		-
+			message: "#^Method Cache\\\\Taggable\\\\TaggablePSR6PoolAdapter\\:\\:getItems\\(\\) should return iterable\\<string, Cache\\\\TagInterop\\\\TaggableCacheItemInterface\\> but returns array\\<int\\|string, Cache\\\\Taggable\\\\TaggablePSR6ItemAdapter\\>\\.$#"
+			count: 1
+			path: ../src/Taggable/TaggablePSR6PoolAdapter.php

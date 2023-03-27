@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -12,6 +15,7 @@
 namespace Cache\Encryption;
 
 use Cache\Adapter\Common\Exception\InvalidArgumentException;
+use Cache\TagInterop\TaggableCacheItemInterface;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use Defuse\Crypto\Key;
 use Psr\Cache\CacheItemInterface;
@@ -23,20 +27,10 @@ use Psr\Cache\CacheItemInterface;
  */
 class EncryptedCachePool implements TaggableCacheItemPoolInterface
 {
-    /**
-     * @type TaggableCacheItemPoolInterface
-     */
-    private $cachePool;
+    private TaggableCacheItemPoolInterface $cachePool;
 
-    /**
-     * @type Key
-     */
-    private $key;
+    private Key $key;
 
-    /**
-     * @param TaggableCacheItemPoolInterface $cachePool
-     * @param Key                            $key
-     */
     public function __construct(TaggableCacheItemPoolInterface $cachePool, Key $key)
     {
         $this->cachePool = $cachePool;
@@ -46,31 +40,37 @@ class EncryptedCachePool implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function getItem($key)
+    public function getItem(string $key): TaggableCacheItemInterface
     {
         $items = $this->getItems([$key]);
+        // Iterable $items always contains one item,
+        // therefore \reset() never gonna give (bool) FALSE.
+        // (Hopefully $items is seekable.)
+        /** @var \Cache\TagInterop\TaggableCacheItemInterface $item */
+        $item = reset($items);
 
-        return reset($items);
+        return $item;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getItems(array $keys = [])
+    public function getItems(array $keys = []): iterable
     {
-        return array_map(function (CacheItemInterface $inner) {
-            if (!$inner instanceof EncryptedItemDecorator) {
-                return new EncryptedItemDecorator($inner, $this->key);
-            }
-
-            return $inner;
-        }, $this->cachePool->getItems($keys));
+        return array_map(
+            function (CacheItemInterface $inner) {
+                return $inner instanceof EncryptedItemDecorator ?
+                    $inner
+                    : new EncryptedItemDecorator($inner, $this->key);
+            },
+            (array) $this->cachePool->getItems($keys),
+        );
     }
 
     /**
      * {@inheritdoc}
      */
-    public function hasItem($key)
+    public function hasItem(string $key): bool
     {
         return $this->cachePool->hasItem($key);
     }
@@ -78,7 +78,7 @@ class EncryptedCachePool implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function clear()
+    public function clear(): bool
     {
         return $this->cachePool->clear();
     }
@@ -86,7 +86,7 @@ class EncryptedCachePool implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function deleteItem($key)
+    public function deleteItem(string $key): bool
     {
         return $this->cachePool->deleteItem($key);
     }
@@ -94,7 +94,7 @@ class EncryptedCachePool implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function deleteItems(array $keys)
+    public function deleteItems(array $keys): bool
     {
         return $this->cachePool->deleteItems($keys);
     }
@@ -102,31 +102,29 @@ class EncryptedCachePool implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function save(CacheItemInterface $item)
+    public function save(CacheItemInterface $item): bool
     {
-        if (!$item instanceof EncryptedItemDecorator) {
-            throw new InvalidArgumentException('Cache items are not transferable between pools. Item MUST implement EncryptedItemDecorator.');
-        }
+        static::assertCacheItem($item);
 
+        /** @var \Cache\Encryption\EncryptedItemDecorator $item */
         return $this->cachePool->save($item->getCacheItem());
     }
 
     /**
      * {@inheritdoc}
      */
-    public function saveDeferred(CacheItemInterface $item)
+    public function saveDeferred(CacheItemInterface $item): bool
     {
-        if (!$item instanceof EncryptedItemDecorator) {
-            throw new InvalidArgumentException('Cache items are not transferable between pools. Item MUST implement EncryptedItemDecorator.');
-        }
+        static::assertCacheItem($item);
 
+        /** @var \Cache\Encryption\EncryptedItemDecorator $item */
         return $this->cachePool->saveDeferred($item->getCacheItem());
     }
 
     /**
      * {@inheritdoc}
      */
-    public function commit()
+    public function commit(): bool
     {
         return $this->cachePool->commit();
     }
@@ -134,7 +132,7 @@ class EncryptedCachePool implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function invalidateTags(array $tags)
+    public function invalidateTags(array $tags): bool
     {
         return $this->cachePool->invalidateTags($tags);
     }
@@ -142,8 +140,18 @@ class EncryptedCachePool implements TaggableCacheItemPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function invalidateTag($tag)
+    public function invalidateTag(string $tag): bool
     {
         return $this->cachePool->invalidateTag($tag);
+    }
+
+    protected function assertCacheItem(CacheItemInterface $item): void
+    {
+        if (!($item instanceof EncryptedItemDecorator)) {
+            throw new InvalidArgumentException(sprintf(
+                'Cache items are not transferable between pools. Item MUST implement %s.',
+                EncryptedItemDecorator::class,
+            ));
+        }
     }
 }

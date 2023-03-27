@@ -1,14 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" backupStaticAttributes="false" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" processIsolation="false" stopOnFailure="false" bootstrap="vendor/autoload.php" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
-  <testsuites>
-    <testsuite name="Main Test Suite">
-      <directory>./src/*/Tests</directory>
-      <directory>./src/*/*/Tests</directory>
-    </testsuite>
-  </testsuites>
-  <php>
-    <env name="MONGODB_HOST" value="localhost:27017"/>
-    <env name="MONGODB_COLLECTION" value="psr6test.cache"/>
-    <env name="MONGODB_DATABASE" value="test"/>
-  </php>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+    displayDetailsOnTestsThatTriggerWarnings="true"
+    colors="true"
+    cacheDirectory=".phpunit.cache">
+
+    <php>
+        <env name="CACHE_REDIS_SERVER1_HOST" value="127.0.0.1" />
+        <env name="CACHE_REDIS_SERVER1_PORT" value="6379" />
+        <env name="CACHE_REDIS_SERVER1_DB" value="1" />
+
+        <env name="CACHE_REDIS_CLUSTER_SEED1_HOST" value="127.0.0.1" />
+        <env name="CACHE_REDIS_CLUSTER_SEED1_PORT" value="7000" />
+        <env name="CACHE_REDIS_CLUSTER_SEED1_DB" value="1" />
+
+        <env name="CACHE_REDIS_CLUSTER_SEED2_HOST" value="127.0.0.1" />
+        <env name="CACHE_REDIS_CLUSTER_SEED2_PORT" value="7001" />
+        <env name="CACHE_REDIS_CLUSTER_SEED2_DB" value="1" />
+
+        <env name="CACHE_REDIS_CLUSTER_SEED3_HOST" value="127.0.0.1" />
+        <env name="CACHE_REDIS_CLUSTER_SEED3_PORT" value="7002" />
+        <env name="CACHE_REDIS_CLUSTER_SEED3_DB" value="1" />
+
+        <env name="CACHE_MEMCACHE_SERVER1_HOST" value="127.0.0.1" />
+        <env name="CACHE_MEMCACHE_SERVER1_PORT" value="11211" />
+
+        <env name="CACHE_MONGODB_SERVER1_HOST" value="127.0.0.1" />
+        <env name="CACHE_MONGODB_SERVER1_PORT" value="27017" />
+        <env name="CACHE_MONGODB_SERVER1_DATABASE" value="test" />
+        <env name="CACHE_MONGODB_SERVER1_COLLECTION" value="psr6test.cache" />
+    </php>
+
+    <testsuites>
+        <testsuite name="Acceptance">
+            <directory>./src/*/Tests</directory>
+            <directory>./src/*/*/Tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <logging>
+        <testdoxHtml outputFile="reports/human/unit/junit.html" />
+        <junit outputFile="reports/machine/unit/junit.xml" />
+    </logging>
+
+    <coverage>
+        <include>
+            <directory>./src/</directory>
+        </include>
+        <exclude>
+            <directory>./src/*/Tests/</directory>
+            <directory>./src/*/*/Tests/</directory>
+        </exclude>
+        <report>
+            <clover outputFile="reports/machine/coverage/coverage.xml" />
+            <html outputDirectory="reports/human/coverage/html" />
+            <text outputFile="php://stdout" />
+        </report>
+    </coverage>
 </phpunit>

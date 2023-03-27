@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -13,10 +16,17 @@ namespace Cache\Adapter\Void\Tests;
 
 use Cache\Adapter\Void\VoidCachePool;
 use Cache\IntegrationTests\SimpleCacheTest as BaseTest;
+use Psr\SimpleCache\CacheInterface;
 
 class IntegrationSimpleCacheTest extends BaseTest
 {
-    protected $skippedTests = [
+
+    /**
+     * {@inheritdoc}
+     *
+     * @var array<string, string>
+     */
+    protected array $skippedTests = [
         'testSet'                            => 'Void adapter does not save,',
         'testSetTtl'                         => 'Void adapter does not save,',
         'testGet'                            => 'Void adapter does not save,',
@@ -43,7 +53,7 @@ class IntegrationSimpleCacheTest extends BaseTest
         'testSetMultipleWithIntegerArrayKey' => 'Void adapter does not save.',
     ];
 
-    public function createSimpleCache()
+    public function createSimpleCache(): CacheInterface
     {
         return new VoidCachePool();
     }

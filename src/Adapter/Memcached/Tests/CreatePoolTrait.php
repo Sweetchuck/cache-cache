@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -15,23 +18,26 @@ use Cache\Adapter\Memcached\MemcachedCachePool;
 
 trait CreatePoolTrait
 {
-    private $client = null;
+    private ?\Memcached $client = null;
 
-    public function createCachePool()
+    public function createCachePool(): MemcachedCachePool
     {
         return new MemcachedCachePool($this->getClient());
     }
 
-    public function createSimpleCache()
+    public function createSimpleCache(): MemcachedCachePool
     {
         return $this->createCachePool();
     }
 
-    private function getClient()
+    private function getClient(): \Memcached
     {
         if ($this->client === null) {
             $this->client = new \Memcached();
-            $this->client->addServer('localhost', 11211);
+            $this->client->addServer(
+                getenv('CACHE_MEMCACHE_SERVER1_HOST') ?: '127.0.0.1',
+                (int) (getenv('CACHE_MEMCACHE_SERVER1_PORT') ?: '11211'),
+            );
         }
 
         return $this->client;

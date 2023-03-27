@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -31,7 +34,7 @@ interface TaggableCacheItemPoolInterface extends CacheItemPoolInterface
      *
      * @return bool True on success
      */
-    public function invalidateTag($tag);
+    public function invalidateTag(string $tag): bool;
 
     /**
      * Invalidates cached items using tags.
@@ -42,19 +45,17 @@ interface TaggableCacheItemPoolInterface extends CacheItemPoolInterface
      *
      * @return bool True on success
      */
-    public function invalidateTags(array $tags);
+    public function invalidateTags(array $tags): bool;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getItem(string $key): TaggableCacheItemInterface;
 
     /**
      * {@inheritdoc}
      *
-     * @return TaggableCacheItemInterface
+     * @return iterable<string, \Cache\TagInterop\TaggableCacheItemInterface>
      */
-    public function getItem($key);
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array|\Traversable|TaggableCacheItemInterface[]
-     */
-    public function getItems(array $keys = []);
+    public function getItems(array $keys = []): iterable;
 }

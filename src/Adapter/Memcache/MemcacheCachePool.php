@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -14,21 +17,14 @@ namespace Cache\Adapter\Memcache;
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Adapter\Common\PhpCacheItem;
 use Cache\Adapter\Common\TagSupportWithArray;
-use Memcache;
 
 class MemcacheCachePool extends AbstractCachePool
 {
     use TagSupportWithArray;
 
-    /**
-     * @type Memcache
-     */
-    protected $cache;
+    protected \Memcache $cache;
 
-    /**
-     * @param Memcache $cache
-     */
-    public function __construct(Memcache $cache)
+    public function __construct(\Memcache $cache)
     {
         $this->cache = $cache;
     }
@@ -36,19 +32,21 @@ class MemcacheCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function fetchObjectFromCache($key)
+    protected function fetchObjectFromCache(string $key): array
     {
-        if (false === $result = unserialize($this->cache->get($key))) {
-            return [false, null, [], null];
+        $emptyValue = [false, null, [], null];
+        $entry = $this->cache->get($key);
+        if (!$entry) {
+            return $emptyValue;
         }
 
-        return $result;
+        return unserialize($entry) ?: $emptyValue;
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function clearAllObjectsFromCache()
+    protected function clearAllObjectsFromCache(): bool
     {
         return $this->cache->flush();
     }
@@ -56,7 +54,7 @@ class MemcacheCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function clearOneObjectFromCache($key)
+    protected function clearOneObjectFromCache(string $key): bool
     {
         $this->cache->delete($key);
 
@@ -66,7 +64,7 @@ class MemcacheCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    protected function storeItemInCache(PhpCacheItem $item, ?int $ttl): bool
     {
         $data = serialize([true, $item->get(), $item->getTags(), $item->getExpirationTimestamp()]);
 
@@ -76,15 +74,17 @@ class MemcacheCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    public function getDirectValue($name)
+    public function getDirectValue(string $name): mixed
     {
         return $this->cache->get($name);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return void
      */
-    public function setDirectValue($name, $value)
+    public function setDirectValue(string $name, mixed $value)
     {
         $this->cache->set($name, $value);
     }

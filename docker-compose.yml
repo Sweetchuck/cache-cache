@@ -1,0 +1,27 @@
+##
+# This service definition file tries to reproduce the same services as defined in
+# ./.github/workflows/qa.yml#/jobs/test/services
+##
+version: '2'
+
+services:
+    redis:
+        image: 'redis:6.0.11'
+        ports:
+            - '6379:6379'
+    redis-cluster:
+        image: 'grokzen/redis-cluster:6.0.11'
+        ports:
+            - '7000:7000'
+            - '7001:7001'
+            - '7002:7002'
+        environment:
+            STANDALONE: 1
+    memcached:
+        image: 'memcached:1.6.19'
+        ports:
+            - '11211:11211'
+    mongodb:
+        image: 'mongo:6.0.5'
+        ports:
+            - '27017:27017'

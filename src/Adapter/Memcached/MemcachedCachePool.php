@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -26,14 +29,8 @@ class MemcachedCachePool extends AbstractCachePool implements HierarchicalPoolIn
     use HierarchicalCachePoolTrait;
     use TagSupportWithArray;
 
-    /**
-     * @type \Memcached
-     */
-    protected $cache;
+    protected \Memcached $cache;
 
-    /**
-     * @param \Memcached $cache
-     */
     public function __construct(\Memcached $cache)
     {
         $this->cache = $cache;
@@ -43,19 +40,21 @@ class MemcachedCachePool extends AbstractCachePool implements HierarchicalPoolIn
     /**
      * {@inheritdoc}
      */
-    protected function fetchObjectFromCache($key)
+    protected function fetchObjectFromCache(string $key): array
     {
-        if (false === $result = unserialize($this->cache->get($this->getHierarchyKey($key)))) {
-            return [false, null, [], null];
+        $emptyValue = [false, null, [], null];
+        $entry = $this->cache->get($this->getHierarchyKey($key));
+        if (!$entry) {
+            return $emptyValue;
         }
 
-        return $result;
+        return unserialize($entry) ?: $emptyValue;
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function clearAllObjectsFromCache()
+    protected function clearAllObjectsFromCache(): bool
     {
         return $this->cache->flush();
     }
@@ -63,34 +62,35 @@ class MemcachedCachePool extends AbstractCachePool implements HierarchicalPoolIn
     /**
      * {@inheritdoc}
      */
-    protected function clearOneObjectFromCache($key)
+    protected function clearOneObjectFromCache(string $key): bool
     {
         $this->commit();
         $path = null;
-        $key  = $this->getHierarchyKey($key, $path);
+        $keyString = $this->getHierarchyKey($key, $path);
         if ($path) {
-            $this->cache->increment($path, 1, 0);
+            $this->cache->increment($path);
         }
         $this->clearHierarchyKeyCache();
 
-        if ($this->cache->delete($key)) {
-            return true;
-        }
-
-        // Return true if key not found
-        return $this->cache->getResultCode() === \Memcached::RES_NOTFOUND;
+        // Return true if key not found.
+        return $this->cache->delete($keyString)
+            || $this->cache->getResultCode() === \Memcached::RES_NOTFOUND;
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    protected function storeItemInCache(PhpCacheItem $item, ?int $ttl): bool
     {
         if ($ttl === null) {
             $ttl = 0;
-        } elseif ($ttl < 0) {
+        }
+
+        if ($ttl < 0) {
             return false;
-        } elseif ($ttl > 86400 * 30) {
+        }
+
+        if ($ttl > 86400 * 30) {
             // Any time higher than 30 days is interpreted as a unix timestamp date.
             // https://github.com/memcached/memcached/wiki/Programming#expiration
             $ttl = time() + $ttl;
@@ -98,21 +98,42 @@ class MemcachedCachePool extends AbstractCachePool implements HierarchicalPoolIn
 
         $key = $this->getHierarchyKey($item->getKey());
 
-        return $this->cache->set($key, serialize([true, $item->get(), $item->getTags(), $item->getExpirationTimestamp()]), $ttl);
+        return $this->cache->set(
+            $key,
+            serialize([
+                true,
+                $item->get(),
+                $item->getTags(),
+                $item->getExpirationTimestamp()
+            ]),
+            $ttl,
+        );
+    }
+
+    protected function preRemoveItem(string $key): static
+    {
+        parent::preRemoveItem($key);
+        if (!$this->isHierarchyKey($key)) {
+            return $this;
+        }
+
+        return $this;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDirectValue($name)
+    public function getDirectValue(string $name): mixed
     {
         return $this->cache->get($name);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return void
      */
-    public function setDirectValue($name, $value)
+    public function setDirectValue(string $name, mixed $value)
     {
         $this->cache->set($name, $value);
     }

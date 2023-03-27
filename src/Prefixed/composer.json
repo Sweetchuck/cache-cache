@@ -15,16 +15,16 @@
             "homepage": "https://github.com/nyholm"
         }
     ],
-    "homepage": "http://www.php-cache.com/en/latest/",
+    "homepage": "https://www.php-cache.com/en/latest/",
     "require": {
-        "php": ">=7.4",
+        "php": ">=8.1",
         "cache/hierarchical-cache": "^1.0",
-        "psr/cache": "^1.0 || ^2.0",
-        "psr/simple-cache": "^1.0"
+        "psr/cache": "^3.0",
+        "psr/simple-cache": "^3.0"
     },
     "require-dev": {
-        "cache/integration-tests": "^0.17",
-        "phpunit/phpunit": "^7.5.20 || ^9.5.10"
+        "cache/integration-tests": "3.x-dev",
+        "phpunit/phpunit": "^10.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -35,6 +35,13 @@
         "exclude-from-classmap": [
             "/Tests/"
         ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": {
+            "*": "dist"
+        },
+        "sort-packages": true
     },
     "extra": {
         "branch-alias": {

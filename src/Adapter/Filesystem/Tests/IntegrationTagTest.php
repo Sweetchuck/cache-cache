@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -12,8 +15,18 @@
 namespace Cache\Adapter\Filesystem\Tests;
 
 use Cache\IntegrationTests\TaggableCachePoolTest;
+use Symfony\Component\Filesystem\Filesystem;
 
 class IntegrationTagTest extends TaggableCachePoolTest
 {
     use CreatePoolTrait;
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function tearDownAfterClass(): void
+    {
+        static::tearDownAfterClassFilesystem();
+        parent::tearDownAfterClass();
+    }
 }

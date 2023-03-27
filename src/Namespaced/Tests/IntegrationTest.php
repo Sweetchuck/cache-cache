@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -12,89 +15,85 @@
 namespace Cache\Namespaced\Tests;
 
 use Cache\Adapter\Memcached\MemcachedCachePool;
-use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\Namespaced\NamespacedCachePool;
-use Memcached;
 use PHPUnit\Framework\TestCase;
-use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
 class IntegrationTest extends TestCase
 {
-    /**
-     * @type CacheItemPoolInterface|HierarchicalPoolInterface
-     */
-    private $cache;
+    private ?MemcachedCachePool $cache;
 
     protected function setUp(): void
     {
-        $cache = new Memcached();
-        $cache->addServer('localhost', 11211);
+        $cache = new \Memcached();
+        $cache->addServer(
+            getenv('CACHE_MEMCACHE_SERVER1_HOST') ?: '127.0.0.1',
+            (int) (getenv('CACHE_MEMCACHE_SERVER1_PORT')) ?: 11211,
+        );
 
         $this->cache = new MemcachedCachePool($cache);
     }
 
     protected function tearDown(): void
     {
-        if ($this->cache !== null) {
-            $this->cache->clear();
-        }
+        $this->cache?->clear();
     }
 
-    public function testGetItem()
+    public function testGetItem(): void
     {
         $namespace = 'ns';
-        $nsPool    = new NamespacedCachePool($this->cache, $namespace);
+        $key = 'myKey01';
+        $nsPool = new NamespacedCachePool($this->cache, $namespace);
 
-        $item = $nsPool->getItem('key');
-        $this->assertEquals("|$namespace|key", $item->getKey());
+        $item = $nsPool->getItem($key);
+        static::assertSame("|$namespace|$key", $item->getKey());
     }
 
-    public function testGetItems()
+    public function testGetItems(): void
     {
         $namespace = 'ns';
-        $nsPool    = new NamespacedCachePool($this->cache, $namespace);
+        $nsPool = new NamespacedCachePool($this->cache, $namespace);
 
         $items = $nsPool->getItems(['key0', 'key1']);
 
         $str = "|$namespace|key0";
-        $this->assertTrue(isset($items[$str]));
-        $this->assertEquals($str, $items[$str]->getKey());
+        static::assertTrue(isset($items[$str]));
+        static::assertSame($str, $items[$str]->getKey());
 
         $str = "|$namespace|key1";
-        $this->assertTrue(isset($items[$str]));
-        $this->assertEquals($str, $items[$str]->getKey());
+        static::assertTrue(isset($items[$str]));
+        static::assertSame($str, $items[$str]->getKey());
     }
 
-    public function testSave()
+    public function testSave(): void
     {
         $namespace = 'ns';
-        $nsPool    = new NamespacedCachePool($this->cache, $namespace);
+        $nsPool = new NamespacedCachePool($this->cache, $namespace);
 
         $item = $nsPool->getItem('key');
         $item->set('foo');
         $nsPool->save($item);
 
-        $this->assertTrue($nsPool->hasItem('key'));
-        $this->assertFalse($this->cache->hasItem('key'));
+        static::assertTrue($nsPool->hasItem('key'));
+        static::assertFalse($this->cache->hasItem('key'));
     }
 
-    public function testSaveDeferred()
+    public function testSaveDeferred(): void
     {
         $namespace = 'ns';
-        $nsPool    = new NamespacedCachePool($this->cache, $namespace);
+        $nsPool = new NamespacedCachePool($this->cache, $namespace);
 
         $item = $nsPool->getItem('key');
         $item->set('foo');
         $nsPool->saveDeferred($item);
 
-        $this->assertTrue($nsPool->hasItem('key'));
-        $this->assertFalse($this->cache->hasItem('key'));
+        static::assertTrue($nsPool->hasItem('key'));
+        static::assertFalse($this->cache->hasItem('key'));
 
         $nsPool->commit();
-        $this->assertTrue($nsPool->hasItem('key'));
-        $this->assertFalse($this->cache->hasItem('key'));
+        static::assertTrue($nsPool->hasItem('key'));
+        static::assertFalse($this->cache->hasItem('key'));
     }
 }

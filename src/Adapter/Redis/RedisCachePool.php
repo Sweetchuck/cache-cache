@@ -1,9 +1,13 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
- * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
+ * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm
+ *     <tobias.nyholm@gmail.com>
  *
  * This source file is subject to the MIT license that is bundled
  * with this source code in the file LICENSE.
@@ -12,7 +16,6 @@
 namespace Cache\Adapter\Redis;
 
 use Cache\Adapter\Common\AbstractCachePool;
-use Cache\Adapter\Common\Exception\CachePoolException;
 use Cache\Adapter\Common\PhpCacheItem;
 use Cache\Hierarchy\HierarchicalCachePoolTrait;
 use Cache\Hierarchy\HierarchicalPoolInterface;
@@ -24,77 +27,69 @@ class RedisCachePool extends AbstractCachePool implements HierarchicalPoolInterf
 {
     use HierarchicalCachePoolTrait;
 
-    /**
-     * @type \Redis
-     */
-    protected $cache;
+    protected \Redis|\RedisArray|\RedisCluster $cache;
 
-    /**
-     * @param \Redis|\RedisArray|\RedisCluster $cache
-     */
-    public function __construct($cache)
+    public function __construct(\Redis|\RedisArray|\RedisCluster $cache)
     {
-        if (!$cache instanceof \Redis
-            && !$cache instanceof \RedisArray
-            && !$cache instanceof \RedisCluster
-        ) {
-            throw new CachePoolException(
-                'Cache instance must be of type \Redis, \RedisArray, or \RedisCluster'
-            );
-        }
-
         $this->cache = $cache;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \RedisException
      */
-    protected function fetchObjectFromCache($key)
+    protected function fetchObjectFromCache(string $key): array
     {
-        if (false === $result = unserialize($this->cache->get($this->getHierarchyKey($key)))) {
-            return [false, null, [], null];
+        $emptyValue = [false, null, [], null];
+        $entry = $this->cache->get($this->getHierarchyKey($key));
+        if (!$entry) {
+            return $emptyValue;
         }
 
-        return $result;
+        $result = is_string($entry) ?
+            unserialize($entry)
+            : false;
+
+        return false === $result ?
+            $emptyValue
+            : $result;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \RedisException
      */
-    protected function clearAllObjectsFromCache()
+    protected function clearAllObjectsFromCache(): bool
     {
         if ($this->cache instanceof \RedisCluster) {
             return $this->clearAllObjectsFromCacheCluster();
         }
 
+        /** @var bool|\Redis $result */
         $result = $this->cache->flushDb();
-
-        if (!is_array($result)) {
+        if (is_bool($result)) {
             return $result;
         }
 
-        $success = true;
-
-        foreach ($result as $serverResult) {
-            if (!$serverResult) {
-                $success = false;
-                break;
-            }
-        }
-
-        return $success;
+        // At this point $result is \Redis.
+        // @todo Check what to do in multimode.
+        return true;
     }
 
     /**
      * Clear all objects from all nodes in the cluster.
      *
-     * @return bool false if error
+     * @throws \RedisException
      */
-    protected function clearAllObjectsFromCacheCluster()
+    protected function clearAllObjectsFromCacheCluster(): bool
     {
-        $nodes = $this->cache->_masters();
+        if (!($this->cache instanceof \RedisCluster)) {
+            return false;
+        }
 
-        foreach ($nodes as $node) {
+        foreach ($this->cache->_masters() as $node) {
             if (!$this->cache->flushDB($node)) {
                 return false;
             }
@@ -105,10 +100,12 @@ class RedisCachePool extends AbstractCachePool implements HierarchicalPoolInterf
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \RedisException
      */
-    protected function clearOneObjectFromCache($key)
+    protected function clearOneObjectFromCache(string $key): bool
     {
-        $path      = null;
+        $path = null;
         $keyString = $this->getHierarchyKey($key, $path);
         if ($path) {
             $this->cache->incr($path);
@@ -120,55 +117,71 @@ class RedisCachePool extends AbstractCachePool implements HierarchicalPoolInterf
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \RedisException
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    protected function storeItemInCache(PhpCacheItem $item, ?int $ttl): bool
     {
-        $key  = $this->getHierarchyKey($item->getKey());
-        $data = serialize([true, $item->get(), $item->getTags(), $item->getExpirationTimestamp()]);
-        if ($ttl === null || $ttl === 0) {
-            return $this->cache->set($key, $data);
-        }
+        $key = $this->getHierarchyKey($item->getKey());
+        $data = serialize([
+            true,
+            $item->get(),
+            $item->getTags(),
+            $item->getExpirationTimestamp(),
+        ]);
 
-        return $this->cache->setex($key, $ttl, $data);
+        return $ttl ?
+            $this->cache->setex($key, $ttl, $data)
+            : $this->cache->set($key, $data);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \RedisException
      */
-    protected function getDirectValue($key)
+    protected function getDirectValue(string $name): mixed
     {
-        return $this->cache->get($key);
+        return $this->cache->get($name);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \RedisException
      */
-    protected function appendListItem($name, $value)
+    protected function appendListItem(string $name, string $key)
     {
-        $this->cache->lPush($name, $value);
+        $this->cache->lPush($name, $key);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \RedisException
      */
-    protected function getList($name)
+    protected function getList(string $name): array
     {
         return $this->cache->lRange($name, 0, -1);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \RedisException
      */
-    protected function removeList($name)
+    protected function removeList(string $name): bool
     {
-        return $this->cache->del($name);
+        return $this->cache->del($name) >= 0;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \RedisException
      */
-    protected function removeListItem($name, $key)
+    protected function removeListItem(string $name, string $key)
     {
-        return $this->cache->lrem($name, $key, 0);
+        $this->cache->lrem($name, $key, 0);
     }
 }

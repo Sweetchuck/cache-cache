@@ -23,13 +23,32 @@
     ],
     "homepage": "https://www.php-cache.com/en/latest/",
     "require": {
-        "php": "^5.5 || ^7.0 || ^8.0",
-        "psr/cache": "^1.0 || ^2.0"
+        "php": ">=8.1",
+        "psr/cache": "^3.0"
     },
+    "repositories": {
+        "cache/integration-tests": {
+            "type": "git",
+            "url": "https://github.com/Sweetchuck/cache-integration-tests.git"
+        },
+        "tedivm/stash": {
+            "type": "github",
+            "url": "https://github.com/Sweetchuck/tedivm-stash.git"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Cache\\TagInterop\\": ""
         }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": {
+            "*": "dist"
+        },
+        "sort-packages": true
     },
     "extra": {
         "branch-alias": {

@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -16,22 +19,25 @@ use Predis\Client;
 
 trait CreatePoolTrait
 {
-    private $client = null;
+    private ?Client $client = null;
 
-    public function createCachePool()
+    public function createCachePool(): PredisCachePool
     {
         return new PredisCachePool($this->getClient());
     }
 
-    public function createSimpleCache()
+    public function createSimpleCache(): PredisCachePool
     {
         return $this->createCachePool();
     }
 
-    private function getClient()
+    private function getClient(): Client
     {
         if ($this->client === null) {
-            $this->client = new Client('tcp:/127.0.0.1:6379');
+            $host = getenv('CACHE_REDIS_SERVER1_HOST') ?: '127.0.0.1';
+            $port = ((int) getenv('CACHE_REDIS_SERVER1_PORT')) ?: 6379;
+            $db = ((int) getenv('CACHE_REDIS_SERVER1_DB')) ?: 1;
+            $this->client = new Client("tcp://$host:$port/$db");
         }
 
         return $this->client;

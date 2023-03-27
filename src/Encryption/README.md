@@ -19,11 +19,11 @@ composer require cache/encryption-cache
 
 ### Use
 
-Read the [documentation on usage](http://www.php-cache.com/en/latest/encryption/).
+Read the [documentation on usage](https://www.php-cache.com/en/latest/encryption/).
 
 ### Implement
 
-Read the [documentation on implementation](http://www.php-cache.com/en/latest/implementing-cache-pools/encryption/).
+Read the [documentation on implementation](https://www.php-cache.com/en/latest/implementing-cache-pools/encryption/).
 
 ### Contribute
 

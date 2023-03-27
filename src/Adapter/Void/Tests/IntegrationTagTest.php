@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -13,10 +16,15 @@ namespace Cache\Adapter\Void\Tests;
 
 use Cache\Adapter\Void\VoidCachePool;
 use Cache\IntegrationTests\TaggableCachePoolTest;
+use Cache\TagInterop\TaggableCacheItemPoolInterface;
 
 class IntegrationTagTest extends TaggableCachePoolTest
 {
-    protected $skippedTests = [
+
+    /**
+     * {@inheritdoc}
+     */
+    protected array $skippedTests = [
         'testBasicUsage'                 => 'Void adapter does not save,',
         'testGetItems'                   => 'Void adapter does not save,',
         'testHasItem'                    => 'Void adapter does not save,',
@@ -34,7 +42,7 @@ class IntegrationTagTest extends TaggableCachePoolTest
         'testTagsAreCleanedOnSave'       => 'Void adapter does not save,',
     ];
 
-    public function createCachePool()
+    public function createCachePool(): TaggableCacheItemPoolInterface
     {
         return new VoidCachePool();
     }

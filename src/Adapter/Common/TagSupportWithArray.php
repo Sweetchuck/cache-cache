@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -20,38 +23,39 @@ trait TagSupportWithArray
 {
     /**
      * Get a value from the storage.
-     *
-     * @param string $name
-     *
-     * @return mixed
      */
-    abstract public function getDirectValue($name);
+    abstract public function getDirectValue(string $name): mixed;
 
     /**
      * Set a value to the storage.
      *
-     * @param string $name
-     * @param mixed  $value
+     * @return void
+     *
+     * @todo Return type hint definition. Maybe static.
      */
-    abstract public function setDirectValue($name, $value);
+    abstract public function setDirectValue(string $name, mixed $value);
 
     /**
-     * {@inheritdoc}
+     * @see \Cache\Adapter\Common\AbstractCachePool::appendListItem
+     *
+     * @return void
+     *
+     * @todo Return type hint definition. Maybe static.
      */
-    protected function appendListItem($name, $value)
+    protected function appendListItem(string $name, string $key)
     {
         $data = $this->getDirectValue($name);
         if (!is_array($data)) {
             $data = [];
         }
-        $data[] = $value;
+        $data[] = $key;
         $this->setDirectValue($name, $data);
     }
 
     /**
-     * {@inheritdoc}
+     * @see \Cache\Adapter\Common\AbstractCachePool::getList
      */
-    protected function getList($name)
+    protected function getList(string $name): array
     {
         $data = $this->getDirectValue($name);
         if (!is_array($data)) {
@@ -62,9 +66,9 @@ trait TagSupportWithArray
     }
 
     /**
-     * {@inheritdoc}
+     * @see \Cache\Adapter\Common\AbstractCachePool::removeList
      */
-    protected function removeList($name)
+    protected function removeList(string $name): bool
     {
         $this->setDirectValue($name, []);
 
@@ -72,9 +76,13 @@ trait TagSupportWithArray
     }
 
     /**
-     * {@inheritdoc}
+     * @see \Cache\Adapter\Common\AbstractCachePool::removeListItem
+     *
+     * @return void
+     *
+     * @todo Return type hint definition. Maybe static.
      */
-    protected function removeListItem($name, $key)
+    protected function removeListItem(string $name, string $key)
     {
         $data = $this->getList($name);
         foreach ($data as $i => $value) {
@@ -83,6 +91,6 @@ trait TagSupportWithArray
             }
         }
 
-        return $this->setDirectValue($name, $data);
+        $this->setDirectValue($name, $data);
     }
 }

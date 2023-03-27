@@ -1,0 +1,45 @@
+parameters:
+    typeAliases:
+        psr6-session-options: '''
+            array{
+                ttl?: int,
+                prefix?: string,
+            }
+        '''
+
+        ##
+        # 0: isHit
+        # 1: value
+        # 2: tags
+        # 3: expirationTimestamp
+        ##
+        cache-item-raw: '''
+            array{
+                0: bool,
+                1: mixed,
+                2: array<string>,
+                3: null|int,
+            }
+        '''
+
+        ##
+        # @todo Allowed values for "type". {@see \settype()}
+        ##
+        cache-encrypted-item-raw: '''
+            array{
+                type: string,
+                value: mixed,
+            }
+        '''
+
+        cache-pool-chain-options-lazy: '''
+            array{
+                skip_on_failure?: bool,
+            }
+        '''
+
+        cache-pool-chain-options-full: '''
+            array{
+                skip_on_failure: bool,
+            }
+        '''

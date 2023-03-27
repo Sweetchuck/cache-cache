@@ -1,3 +1,15 @@
 /vendor/
-composer.lock
-phpunit.xml
+/composer.lock
+
+/reports/
+
+/phpcs.xml
+
+/psalm.local.xml
+
+/phpstan.neon
+
+/phpunit.xml
+/.phpunit.cache/
+
+/src/Adapter/Filesystem/tmp/

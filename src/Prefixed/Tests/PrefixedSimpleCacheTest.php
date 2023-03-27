@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -23,25 +26,30 @@ use Psr\SimpleCache\CacheInterface;
 class PrefixedSimpleCacheTest extends TestCase
 {
     /**
-     * @param string $method    Method name to mock.
-     * @param array  $arguments List of expected arguments.
-     * @param type   $result
+     * @param string $method
+     *   Method name to mock.
+     * @param array<mixed> $arguments
+     *   List of expected arguments.
      *
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return \Psr\SimpleCache\CacheInterface&\PHPUnit\Framework\MockObject\MockObject
      */
-    private function getCacheStub($method, $arguments, $result)
+    private function getCacheStub(string $method, array $arguments, mixed $result)
     {
-        $stub = $this->getMockBuilder(CacheInterface::class)
-            ->setMethods(['get', 'set', 'delete', 'clear', 'getMultiple', 'setMultiple', 'deleteMultiple', 'has'])
+        $stub = $this
+            ->getMockBuilder(CacheInterface::class)
+            ->onlyMethods(['get', 'set', 'delete', 'clear', 'getMultiple', 'setMultiple', 'deleteMultiple', 'has'])
             ->getMock();
 
-        $invocation = $stub->expects($this->once())->method($method);
-        call_user_func_array([$invocation->willReturn($result), 'with'], $arguments);
+        $stub
+            ->expects($this->once())
+            ->method($method)
+            ->with(...$arguments)
+            ->willReturn($result);
 
         return $stub;
     }
 
-    public function testGet()
+    public function testGet(): void
     {
         $prefix = 'ns';
         $key    = 'key';
@@ -50,10 +58,10 @@ class PrefixedSimpleCacheTest extends TestCase
         $stub = $this->getCacheStub('get', [$prefix.$key], $result);
         $pool = new PrefixedSimpleCache($stub, $prefix);
 
-        $this->assertEquals($result, $pool->get($key));
+        static::assertEquals($result, $pool->get($key));
     }
 
-    public function testSet()
+    public function testSet(): void
     {
         $prefix = 'ns';
         $key    = 'key';
@@ -63,10 +71,10 @@ class PrefixedSimpleCacheTest extends TestCase
         $stub = $this->getCacheStub('set', [$prefix.$key, $value], $result);
         $pool = new PrefixedSimpleCache($stub, $prefix);
 
-        $this->assertEquals($result, $pool->set($key, $value));
+        static::assertEquals($result, $pool->set($key, $value));
     }
 
-    public function testDelete()
+    public function testDelete(): void
     {
         $prefix = 'ns';
         $key    = 'key';
@@ -75,10 +83,10 @@ class PrefixedSimpleCacheTest extends TestCase
         $stub = $this->getCacheStub('delete', [$prefix.$key], $result);
         $pool = new PrefixedSimpleCache($stub, $prefix);
 
-        $this->assertEquals($result, $pool->delete($key));
+        static::assertEquals($result, $pool->delete($key));
     }
 
-    public function testClear()
+    public function testClear(): void
     {
         $prefix = 'ns';
         $result = true;
@@ -86,25 +94,32 @@ class PrefixedSimpleCacheTest extends TestCase
         $stub = $this->getCacheStub('clear', [], $result);
         $pool = new PrefixedSimpleCache($stub, $prefix);
 
-        $this->assertEquals($result, $pool->clear());
+        static::assertEquals($result, $pool->clear());
     }
 
-    public function testGetMultiple()
+    public function testGetMultiple(): void
     {
         $prefix              = 'ns';
         list($key1, $value1) = ['key1', 1];
         list($key2, $value2) = ['key2', 2];
 
-        $stub = $this->getCacheStub('getMultiple', [[$prefix.$key1, $prefix.$key2]], [
-            $prefix.$key1 => $value1,
-            $prefix.$key2 => $value2,
-        ]);
+        $stub = $this->getCacheStub(
+            'getMultiple',
+            [[$prefix.$key1, $prefix.$key2]],
+            [
+                $prefix.$key1 => $value1,
+                $prefix.$key2 => $value2,
+            ],
+        );
         $pool = new PrefixedSimpleCache($stub, $prefix);
 
-        $this->assertEquals([$key1 => $value1, $key2 => $value2], $pool->getMultiple([$key1, $key2]));
+        static::assertEquals(
+            [$key1 => $value1, $key2 => $value2],
+            $pool->getMultiple([$key1, $key2]),
+        );
     }
 
-    public function testSetMultiple()
+    public function testSetMultiple(): void
     {
         $prefix              = 'ns';
         list($key1, $value1) = ['key1', 1];
@@ -114,10 +129,10 @@ class PrefixedSimpleCacheTest extends TestCase
         $stub = $this->getCacheStub('setMultiple', [[$prefix.$key1 => $value1, $prefix.$key2 => $value2]], $result);
         $pool = new PrefixedSimpleCache($stub, $prefix);
 
-        $this->assertEquals($result, $pool->setMultiple([$key1 => $value1, $key2 => $value2]));
+        static::assertEquals($result, $pool->setMultiple([$key1 => $value1, $key2 => $value2]));
     }
 
-    public function testDeleteMultiple()
+    public function testDeleteMultiple(): void
     {
         $prefix            = 'ns';
         list($key1, $key2) = ['key1', 'key2'];
@@ -126,10 +141,10 @@ class PrefixedSimpleCacheTest extends TestCase
         $stub = $this->getCacheStub('deleteMultiple', [[$prefix.$key1, $prefix.$key2]], $result);
         $pool = new PrefixedSimpleCache($stub, $prefix);
 
-        $this->assertEquals($result, $pool->deleteMultiple([$key1, $key2]));
+        static::assertEquals($result, $pool->deleteMultiple([$key1, $key2]));
     }
 
-    public function testHas()
+    public function testHas(): void
     {
         $prefix = 'ns';
         $key    = 'key';
@@ -138,6 +153,6 @@ class PrefixedSimpleCacheTest extends TestCase
         $stub = $this->getCacheStub('has', [$prefix.$key], $result);
         $pool = new PrefixedSimpleCache($stub, $prefix);
 
-        $this->assertEquals($result, $pool->has($key));
+        static::assertEquals($result, $pool->has($key));
     }
 }

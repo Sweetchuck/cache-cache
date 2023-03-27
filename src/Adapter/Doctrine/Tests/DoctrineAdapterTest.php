@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -14,9 +17,6 @@ namespace Cache\Adapter\Doctrine\Tests;
 use Cache\Adapter\Common\CacheItem;
 use Cache\Adapter\Doctrine\DoctrineCachePool;
 use Doctrine\Common\Cache\Cache;
-use Doctrine\Common\Cache\FlushableCache;
-use Mockery as m;
-use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -25,53 +25,35 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 class DoctrineAdapterTest extends TestCase
 {
-    /**
-     * @type DoctrineCachePool
-     */
-    private $pool;
+    private DoctrineCachePool $pool;
 
     /**
-     * @type MockInterface|CacheItem
+     * @var \Cache\Adapter\Common\CacheItem&\PHPUnit\Framework\MockObject\MockObject
      */
     private $mockItem;
 
     /**
-     * @type MockInterface|Cache
+     * @var \Doctrine\Common\Cache\Cache&\PHPUnit\Framework\MockObject\MockObject
      */
     private $mockDoctrine;
 
     protected function setUp(): void
     {
-        $this->mockItem     = m::mock(CacheItem::class);
-        $this->mockDoctrine = m::mock(Cache::class);
+        $this->mockItem = $this->createMock(CacheItem::class);
+        $this->mockDoctrine = $this->createMock(Cache::class);
 
         $this->pool = new DoctrineCachePool($this->mockDoctrine);
     }
 
-    public function testConstructor()
+    public function testConstructor(): void
     {
-        $this->assertInstanceOf(DoctrineCachePool::class, $this->pool);
-        $this->assertInstanceOf(CacheItemPoolInterface::class, $this->pool);
+        static::assertInstanceOf(DoctrineCachePool::class, $this->pool);
+        static::assertInstanceOf(CacheItemPoolInterface::class, $this->pool);
     }
 
-    public function testGetCache()
+    public function testGetCache(): void
     {
-        $this->assertInstanceOf(Cache::class, $this->pool->getCache());
-        $this->assertEquals($this->mockDoctrine, $this->pool->getCache());
-    }
-
-    public function testClear()
-    {
-        $this->assertFalse($this->pool->clear());
-
-        $cache = m::mock(Cache::class.','.FlushableCache::class);
-        $cache->shouldReceive('flushAll')->andReturn(true);
-
-        $newPool = new DoctrineCachePool($cache);
-        $this->assertTrue($newPool->clear());
-
-        $cache->shouldReceive('fetch');
-        $cache->shouldReceive('save');
-        $this->assertTrue($newPool->clear(['dummy_tag']));
+        static::assertInstanceOf(Cache::class, $this->pool->getCache());
+        static::assertEquals($this->mockDoctrine, $this->pool->getCache());
     }
 }

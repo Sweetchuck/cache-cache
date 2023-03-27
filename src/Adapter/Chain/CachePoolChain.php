@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -12,40 +15,35 @@
 namespace Cache\Adapter\Chain;
 
 use Cache\Adapter\Chain\Exception\NoPoolAvailableException;
-use Cache\Adapter\Chain\Exception\PoolFailedException;
 use Cache\Adapter\Common\Exception\CachePoolException;
+use Cache\TagInterop\TaggableCacheItemInterface;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerAwareTrait;
 
 /**
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
 class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInterface, LoggerAwareInterface
 {
-    /**
-     * @type LoggerInterface
-     */
-    private $logger;
+    use LoggerAwareTrait;
 
     /**
-     * @type TaggableCacheItemPoolInterface[]|CacheItemPoolInterface[]
+     * @var array<\Cache\TagInterop\TaggableCacheItemPoolInterface>
      */
-    private $pools;
+    private array $pools;
 
     /**
-     * @type array
+     * @phpstan-var cache-pool-chain-options-full
      */
-    private $options;
+    private array $options;
 
     /**
-     * @param array $pools
-     * @param array $options {
+     * @param array<\Cache\TagInterop\TaggableCacheItemPoolInterface> $pools
      *
-     *      @type  bool  $skip_on_failure If true we will remove a pool form the chain if it fails.
-     * }
+     * @phpstan-param cache-pool-chain-options-lazy $options
      */
     public function __construct(array $pools, array $options = [])
     {
@@ -61,7 +59,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function getItem($key)
+    public function getItem(string $key): TaggableCacheItemInterface
     {
         $found     = false;
         $result    = null;
@@ -97,8 +95,10 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
 
     /**
      * {@inheritdoc}
+     *
+     * @phpstan-return array<string, \Psr\Cache\CacheItemInterface>
      */
-    public function getItems(array $keys = [])
+    public function getItems(array $keys = []): iterable
     {
         $hits          = [];
         $loadedItems   = [];
@@ -108,7 +108,6 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
             try {
                 $items = $pool->getItems($keys);
 
-                /** @type CacheItemInterface $item */
                 foreach ($items as $item) {
                     if ($item->isHit()) {
                         $hits[$item->getKey()] = $item;
@@ -152,7 +151,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function hasItem($key)
+    public function hasItem(string $key): bool
     {
         foreach ($this->getPools() as $poolKey => $pool) {
             try {
@@ -170,7 +169,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function clear()
+    public function clear(): bool
     {
         $result = true;
         foreach ($this->getPools() as $poolKey => $pool) {
@@ -187,7 +186,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function deleteItem($key)
+    public function deleteItem(string $key): bool
     {
         $result = true;
         foreach ($this->getPools() as $poolKey => $pool) {
@@ -204,7 +203,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function deleteItems(array $keys)
+    public function deleteItems(array $keys): bool
     {
         $result = true;
         foreach ($this->getPools() as $poolKey => $pool) {
@@ -221,7 +220,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function save(CacheItemInterface $item)
+    public function save(CacheItemInterface $item): bool
     {
         $result = true;
         foreach ($this->getPools() as $poolKey => $pool) {
@@ -238,7 +237,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function saveDeferred(CacheItemInterface $item)
+    public function saveDeferred(CacheItemInterface $item): bool
     {
         $result = true;
         foreach ($this->getPools() as $poolKey => $pool) {
@@ -255,7 +254,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function commit()
+    public function commit(): bool
     {
         $result = true;
         foreach ($this->getPools() as $poolKey => $pool) {
@@ -272,7 +271,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function invalidateTag($tag)
+    public function invalidateTag(string $tag): bool
     {
         return $this->invalidateTags([$tag]);
     }
@@ -280,7 +279,7 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     /**
      * {@inheritdoc}
      */
-    public function invalidateTags(array $tags)
+    public function invalidateTags(array $tags): bool
     {
         $result = true;
         foreach ($this->getPools() as $poolKey => $pool) {
@@ -295,33 +294,21 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     }
 
     /**
-     * @param LoggerInterface $logger
-     */
-    public function setLogger(LoggerInterface $logger): void
-    {
-        $this->logger = $logger;
-    }
-
-    /**
      * Logs with an arbitrary level if the logger exists.
      *
-     * @param mixed  $level
-     * @param string $message
-     * @param array  $context
+     * @phpstan-param array<string, mixed> $context
      */
-    protected function log($level, $message, array $context = [])
+    protected function log(mixed $level, string|\Stringable $message, array $context = []): void
     {
-        if ($this->logger !== null) {
-            $this->logger->log($level, $message, $context);
-        }
+        $this->logger?->log($level, $message, $context);
     }
 
     /**
-     * @return array|\Psr\Cache\CacheItemPoolInterface[]
+     * @return array<\Cache\TagInterop\TaggableCacheItemPoolInterface>
      */
-    protected function getPools()
+    protected function getPools(): array
     {
-        if (empty($this->pools)) {
+        if (!$this->pools) {
             throw new NoPoolAvailableException('No valid cache pool available for the chain.');
         }
 
@@ -329,13 +316,9 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
     }
 
     /**
-     * @param string             $poolKey
-     * @param string             $operation
-     * @param CachePoolException $exception
-     *
-     * @throws PoolFailedException
+     * @throws \Cache\Adapter\Chain\Exception\PoolFailedException
      */
-    private function handleException($poolKey, $operation, CachePoolException $exception)
+    private function handleException(string $poolKey, string $operation, CachePoolException $exception): void
     {
         if (!$this->options['skip_on_failure']) {
             throw $exception;
@@ -346,9 +329,9 @@ class CachePoolChain implements CacheItemPoolInterface, TaggableCacheItemPoolInt
             sprintf(
                 'Removing pool "%s" from chain because it threw an exception when executing "%s"',
                 $poolKey,
-                $operation
+                $operation,
             ),
-            ['exception' => $exception]
+            ['exception' => $exception],
         );
 
         unset($this->pools[$poolKey]);

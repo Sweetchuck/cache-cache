@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -18,7 +21,7 @@ class IntegrationSimpleCacheTest extends SimpleCacheTest
 {
     use CreateServerTrait;
 
-    public function createSimpleCache()
+    public function createSimpleCache(): MongoDBCachePool
     {
         return new MongoDBCachePool($this->getCollection());
     }

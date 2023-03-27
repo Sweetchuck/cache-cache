@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -11,6 +14,7 @@
 
 namespace Cache\SessionHandler;
 
+use DateInterval;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -18,27 +22,20 @@ use Psr\SimpleCache\CacheInterface;
  */
 class Psr16SessionHandler extends AbstractSessionHandler
 {
-    /**
-     * @type CacheInterface
-     */
-    private $cache;
+    private CacheInterface $cache;
 
     /**
-     * @type int Time to live in seconds
+     * Time to live in seconds.
      */
-    private $ttl;
+    private int $ttl;
 
     /**
-     * @type string Key prefix for shared environments.
+     * Key prefix for shared environments.
      */
-    private $prefix;
+    private string $prefix;
 
     /**
-     * @param CacheInterface $cache
-     * @param array          $options {
-     * @type  int            $ttl The time to live in seconds
-     * @type  string         $prefix The prefix to use for the cache keys in order to avoid collision
-     *                               }
+     * @phpstan-param psr6-session-options $options
      *
      * @throws \InvalidArgumentException
      */
@@ -49,54 +46,48 @@ class Psr16SessionHandler extends AbstractSessionHandler
         if ($diff = array_diff(array_keys($options), ['prefix', 'ttl'])) {
             throw new \InvalidArgumentException(sprintf(
                 'The following options are not supported "%s"',
-                implode(', ', $diff)
+                implode(', ', $diff),
             ));
         }
 
-        $this->ttl    = isset($options['ttl']) ? (int) $options['ttl'] : 86400;
-        $this->prefix = isset($options['prefix']) ? $options['prefix'] : 'psr16ses_';
+        $this->ttl = (int) ($options['ttl'] ?? 86400);
+        $this->prefix = $options['prefix'] ?? 'psr16ses_';
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \Exception
      */
-    public function updateTimestamp($sessionId, $data)
+    public function updateTimestamp(string $id, string $data): bool
     {
-        $value = $this->cache->get($this->prefix.$sessionId);
+        $value = $this->cache->get($this->prefix.$id);
 
         if ($value === null) {
             return false;
         }
 
         return $this->cache->set(
-            $this->prefix.$sessionId,
+            $this->prefix.$id,
             $value,
-            \DateTime::createFromFormat('U', \time() + $this->ttl)
+            $this->ttl,
         );
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
-    protected function doRead($sessionId)
+    protected function doRead(string $id): string
     {
-        return $this->cache->get($this->prefix.$sessionId, '');
+        return $this->cache->get($this->prefix.$id, '');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function doWrite($sessionId, $data)
+    protected function doWrite(string $sessionId, string $data): bool
     {
         return $this->cache->set($this->prefix.$sessionId, $data, $this->ttl);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function doDestroy($sessionId)
+    protected function doDestroy(string $sessionId): bool
     {
         return $this->cache->delete($this->prefix.$sessionId);
     }

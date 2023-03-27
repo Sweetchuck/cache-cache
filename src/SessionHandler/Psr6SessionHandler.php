@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -11,6 +14,7 @@
 
 namespace Cache\SessionHandler;
 
+use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
@@ -19,27 +23,17 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 class Psr6SessionHandler extends AbstractSessionHandler
 {
-    /**
-     * @type CacheItemPoolInterface
-     */
-    private $cache;
+    private CacheItemPoolInterface $cache;
+
+    private int $ttl;
 
     /**
-     * @type int Time to live in seconds
+     * Key prefix for shared environments.
      */
-    private $ttl;
+    private string $prefix;
 
     /**
-     * @type string Key prefix for shared environments.
-     */
-    private $prefix;
-
-    /**
-     * @param CacheItemPoolInterface $cache
-     * @param array                  $options {
-     * @type  int                    $ttl The time to live in seconds
-     * @type  string                 $prefix The prefix to use for the cache keys in order to avoid collision
-     *                                       }
+     * @phpstan-param psr6-session-options $options
      *
      * @throws \InvalidArgumentException
      */
@@ -50,73 +44,73 @@ class Psr6SessionHandler extends AbstractSessionHandler
         if ($diff = array_diff(array_keys($options), ['prefix', 'ttl'])) {
             throw new \InvalidArgumentException(sprintf(
                 'The following options are not supported "%s"',
-                implode(', ', $diff)
+                implode(', ', $diff),
             ));
         }
 
-        $this->ttl    = isset($options['ttl']) ? (int) $options['ttl'] : 86400;
-        $this->prefix = isset($options['prefix']) ? $options['prefix'] : 'psr6ses_';
+        $options += [
+            'ttl' => 86400,
+            'prefix' => 'psr6ses_',
+        ];
+
+        $this->ttl = $options['ttl'];
+        $this->prefix = $options['prefix'];
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function updateTimestamp($sessionId, $data)
+    public function updateTimestamp(string $id, string $data): bool
     {
-        $item = $this->getCacheItem($sessionId);
-        $item->expiresAt(\DateTime::createFromFormat('U', \time() + $this->ttl));
+        $item = $this->getCacheItem($id);
+        $expiration = \DateTime::createFromFormat(
+            'U',
+            (string) (\time() + $this->ttl),
+        );
+        $item->expiresAt($expiration ?: null);
 
         return $this->cache->save($item);
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    protected function doRead($sessionId)
+    protected function doRead(string $id): string
     {
-        $item = $this->getCacheItem($sessionId);
+        $item = $this->getCacheItem($id);
 
-        if ($item->isHit()) {
-            return $item->get();
-        }
-
-        return '';
+        return $item->isHit() ?
+            $item->get()
+            : '';
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    protected function doWrite($sessionId, $data)
+    protected function doWrite(string $sessionId, string $data): bool
     {
         $item = $this->getCacheItem($sessionId);
-        $item->set($data)
+        $item
+            ->set($data)
             ->expiresAfter($this->ttl);
 
         return $this->cache->save($item);
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    protected function doDestroy($sessionId)
+    protected function doDestroy(string $sessionId): bool
     {
         return $this->cache->deleteItem($this->prefix.$sessionId);
     }
 
     /**
-     * @param string $sessionId
-     *
      * @throws \Psr\Cache\InvalidArgumentException
-     *
-     * @return \Psr\Cache\CacheItemInterface
      */
-    private function getCacheItem($sessionId)
+    private function getCacheItem(string $sessionId): CacheItemInterface
     {
         return $this->cache->getItem($this->prefix.$sessionId);
     }

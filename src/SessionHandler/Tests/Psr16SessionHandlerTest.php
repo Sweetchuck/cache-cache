@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -13,15 +16,16 @@ namespace Cache\SessionHandler\Tests;
 
 use Cache\Adapter\PHPArray\ArrayCachePool;
 use Cache\SessionHandler\Psr16SessionHandler;
-use Psr\SimpleCache\CacheInterface;
 
 /**
  * @author Daniel Bannert <d.bannert@anolilab.de>s
+ *
+ * @property \Cache\SessionHandler\Psr16SessionHandler $handler
  */
-class Psr16SessionHandlerTest extends AbstractSessionHandlerTest
+class Psr16SessionHandlerTest extends AbstractSessionHandlerTestBase
 {
     /**
-     * @type \PHPUnit_Framework_MockObject_MockObject|CacheInterface
+     * @var \PHPUnit\Framework\MockObject\MockObject&\Psr\SimpleCache\CacheInterface
      */
     private $psr16;
 
@@ -29,66 +33,87 @@ class Psr16SessionHandlerTest extends AbstractSessionHandlerTest
     {
         parent::setUp();
 
-        $this->psr16 = $this->getMockBuilder(ArrayCachePool::class)
-            ->setMethods(['get', 'set', 'delete'])
+        $this->psr16 = $this
+            ->getMockBuilder(ArrayCachePool::class)
+            ->onlyMethods(['get', 'set', 'delete'])
             ->getMock();
-        $this->handler = new Psr16SessionHandler($this->psr16, ['prefix' => self::PREFIX, 'ttl' => self::TTL]);
+
+        $this->handler = new Psr16SessionHandler(
+            $this->psr16,
+            [
+                'prefix' => self::PREFIX,
+                'ttl' => self::TTL,
+            ],
+        );
     }
 
-    public function testReadMiss()
+    public function testReadMiss(): void
     {
-        $this->psr16->expects($this->once())
+        $this
+            ->psr16
+            ->expects(static::once())
             ->method('get')
             ->willReturn('');
 
-        $this->assertEquals('', $this->handler->read('foo'));
+        static::assertEquals('', $this->handler->read('foo'));
     }
 
-    public function testReadHit()
+    public function testReadHit(): void
     {
-        $this->psr16->expects($this->once())
+        $this
+            ->psr16
+            ->expects(static::once())
             ->method('get')
             ->with(self::PREFIX.'foo', '')
             ->willReturn('bar');
 
-        $this->assertEquals('bar', $this->handler->read('foo'));
+        static::assertEquals('bar', $this->handler->read('foo'));
     }
 
-    public function testWrite()
+    public function testWrite(): void
     {
-        $this->psr16->expects($this->once())
+        $this
+            ->psr16
+            ->expects(static::once())
             ->method('set')
             ->with(self::PREFIX.'foo', 'session value', self::TTL)
             ->willReturn(true);
 
-        $this->assertTrue($this->handler->write('foo', 'session value'));
+        static::assertTrue($this->handler->write('foo', 'session value'));
     }
 
-    public function testDestroy()
+    public function testDestroy(): void
     {
-        $this->psr16->expects($this->once())
+        $this
+            ->psr16
+            ->expects(static::once())
             ->method('delete')
             ->with(self::PREFIX.'foo')
             ->willReturn(true);
 
-        $this->assertTrue($this->handler->destroy('foo'));
+        static::assertTrue($this->handler->destroy('foo'));
     }
 
     /**
      * @dataProvider getOptionFixtures
+     *
+     * @phpstan-param psr6-session-options $options
      */
-    public function testSupportedOptions($options, $supported)
+    public function testSupportedOptions(array $options, bool $supported): void
     {
         try {
             new Psr16SessionHandler($this->psr16, $options);
 
-            $this->assertTrue($supported);
+            static::assertTrue($supported);
         } catch (\InvalidArgumentException $e) {
-            $this->assertFalse($supported);
+            static::assertFalse($supported);
         }
     }
 
-    public function getOptionFixtures()
+    /**
+     * @phpstan-return array<mixed>
+     */
+    public static function getOptionFixtures(): array
     {
         return [
             [['prefix' => 'session'], true],
@@ -98,27 +123,37 @@ class Psr16SessionHandlerTest extends AbstractSessionHandlerTest
         ];
     }
 
-    public function testUpdateTimestamp()
+    public function testUpdateTimestamp(): void
     {
-        $this->psr16->expects($this->once())
+        $this
+            ->psr16
+            ->expects(static::once())
             ->method('get')
             ->with(self::PREFIX.'foo')
             ->willReturn('session value');
-        $this->psr16->expects($this->once())
+        $this
+            ->psr16
+            ->expects(static::once())
             ->method('set')
-            ->with(self::PREFIX.'foo', 'session value', \DateTime::createFromFormat('U', \time() + self::TTL))
+            ->with(
+                self::PREFIX.'foo',
+                'session value',
+                100,
+            )
             ->willReturn(true);
 
-        $this->assertTrue($this->handler->updateTimestamp('foo', 'session value'));
+        static::assertTrue($this->handler->updateTimestamp('foo', 'session value'));
     }
 
-    public function testValidateId()
+    public function testValidateId(): void
     {
-        $this->psr16->expects($this->once())
+        $this
+            ->psr16
+            ->expects(static::once())
             ->method('get')
             ->with(self::PREFIX.'foo', '')
             ->willReturn('bar');
 
-        $this->assertTrue($this->handler->validateId('foo'));
+        static::assertTrue($this->handler->validateId('foo'));
     }
 }

@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -11,7 +14,6 @@
 
 namespace Cache\Bridge\Doctrine;
 
-use Doctrine\Common\Cache\Cache;
 use Doctrine\Common\Cache\CacheProvider;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -22,10 +24,7 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 class DoctrineCacheBridge extends CacheProvider
 {
-    /**
-     * @type CacheItemPoolInterface
-     */
-    private $cachePool;
+    private CacheItemPoolInterface $cachePool;
 
     /**
      * DoctrineCacheBridge constructor.
@@ -37,10 +36,7 @@ class DoctrineCacheBridge extends CacheProvider
         $this->cachePool = $cachePool;
     }
 
-    /**
-     * @return CacheItemPoolInterface
-     */
-    public function getCachePool()
+    public function getCachePool(): CacheItemPoolInterface
     {
         return $this->cachePool;
     }
@@ -124,22 +120,22 @@ class DoctrineCacheBridge extends CacheProvider
      *
      * @since 2.2
      *
-     * @return array|null An associative array with server's statistics if available, NULL otherwise.
+     * @return null|array<mixed>
+     *   An associative array with server's statistics if available,
+     *   NULL otherwise.
      */
-    protected function doGetStats()
+    protected function doGetStats(): ?array
     {
-        // Not possible, as of yet
+        // Not possible, as of yet.
+        return null;
     }
 
     /**
      * We need to make sure we do not use any characters not supported.
-     *
-     * @param string $key
-     *
-     * @return string
      */
-    private function normalizeKey($key)
+    private function normalizeKey(string $key): string
     {
+        // @todo It should throw an \Psr\Cache\InvalidArgumentException.
         if (preg_match('|[\{\}\(\)/\\\@\:]|', $key)) {
             return preg_replace('|[\{\}\(\)/\\\@\:]|', '_', $key);
         }

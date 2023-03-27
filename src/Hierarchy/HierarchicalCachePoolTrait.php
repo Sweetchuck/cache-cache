@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -21,29 +24,26 @@ trait HierarchicalCachePoolTrait
     /**
      * A temporary cache for keys.
      *
-     * @type array
+     * @var array<string, mixed>
      */
-    private $keyCache = [];
+    private array $keyCache = [];
 
     /**
      * Get a value from the storage.
-     *
-     * @param string $name
-     *
-     * @return mixed
      */
-    abstract public function getDirectValue($name);
+    abstract public function getDirectValue(string $name): mixed;
 
     /**
      * Get a key to use with the hierarchy. If the key does not start with HierarchicalPoolInterface::SEPARATOR
      * this will return an unalterered key. This function supports a tagged key. Ie "foo:bar".
      *
-     * @param string $key      The original key
-     * @param string &$pathKey A cache key for the path. If this key is changed everything beyond that path is changed.
-     *
-     * @return string|array
+     * @param string $key
+     *   The original key.
+     * @param null|string $pathKey
+     *   A cache key for the path. If this key is changed everything beyond that
+     *   path is changed.
      */
-    protected function getHierarchyKey($key, &$pathKey = null)
+    protected function getHierarchyKey(string $key, ?string &$pathKey = null): string
     {
         if (!$this->isHierarchyKey($key)) {
             return $key;
@@ -62,7 +62,7 @@ trait HierarchicalCachePoolTrait
             if (isset($this->keyCache[$pathKey])) {
                 $index = $this->keyCache[$pathKey];
             } else {
-                $index                    = $this->getDirectValue($pathKey);
+                $index = $this->getDirectValue($pathKey);
                 $this->keyCache[$pathKey] = $index;
             }
 
@@ -81,45 +81,46 @@ trait HierarchicalCachePoolTrait
     /**
      * Clear the cache for the keys.
      */
-    protected function clearHierarchyKeyCache()
+    protected function clearHierarchyKeyCache(): void
     {
         $this->keyCache = [];
     }
 
     /**
      * A hierarchy key MUST begin with the separator.
-     *
-     * @param string $key
-     *
-     * @return bool
      */
-    private function isHierarchyKey($key)
+    private function isHierarchyKey(string $key): bool
     {
-        return substr($key, 0, 1) === HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
+        return str_starts_with($key, HierarchicalPoolInterface::HIERARCHY_SEPARATOR);
     }
 
     /**
-     * This will take a hierarchy key ("|foo|bar") with tags ("|foo|bar!tagHash") and return an array with
-     * each level in the hierarchy appended with the tags. ["foo!tagHash", "bar!tagHash"].
+     * This will take a hierarchy key ("|foo|bar") with tags ("|foo|bar!tagHash")
+     * and return an array with each level in the hierarchy appended with the tags.
+     * ["foo!tagHash", "bar!tagHash"].
      *
-     * @param string $string
-     *
-     * @return array
+     * @return string[]
      */
-    private function explodeKey($string)
+    private function explodeKey(string $string): array
     {
-        list($key, $tag) = explode(AbstractCachePool::SEPARATOR_TAG, $string.AbstractCachePool::SEPARATOR_TAG);
+        list($key, $tag) = explode(
+            AbstractCachePool::SEPARATOR_TAG,
+            $string.AbstractCachePool::SEPARATOR_TAG,
+        );
 
         if ($key === HierarchicalPoolInterface::HIERARCHY_SEPARATOR) {
             $parts = ['root'];
         } else {
             $parts = explode(HierarchicalPoolInterface::HIERARCHY_SEPARATOR, $key);
-            // remove first element since it is always empty and replace it with 'root'
+            // Remove first element since it is always empty and replace it with 'root'.
             $parts[0] = 'root';
         }
 
-        return array_map(function ($level) use ($tag) {
-            return $level.AbstractCachePool::SEPARATOR_TAG.$tag;
-        }, $parts);
+        return array_map(
+            function (string|\Stringable $level) use ($tag): string {
+                return $level.AbstractCachePool::SEPARATOR_TAG.$tag;
+            },
+            $parts,
+        );
     }
 }

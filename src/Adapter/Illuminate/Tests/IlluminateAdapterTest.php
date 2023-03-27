@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -14,38 +17,43 @@ namespace Cache\Adapter\Illuminate\Tests;
 use Cache\Adapter\Common\CacheItem;
 use Cache\Adapter\Illuminate\IlluminateCachePool;
 use Illuminate\Contracts\Cache\Store;
-use Mockery as m;
-use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Cache\CacheItemPoolInterface;
 
 class IlluminateAdapterTest extends TestCase
 {
-    /**
-     * @type IlluminateCachePool
-     */
-    private $pool;
+    private IlluminateCachePool $pool;
 
     /**
-     * @type MockInterface|CacheItem
+     * @var \Cache\Adapter\Common\CacheItem&\PHPUnit\Framework\MockObject\MockObject
      */
     private $mockItem;
 
     /**
-     * @type MockInterface|Store
+     * @var \Illuminate\Contracts\Cache\Store&\PHPUnit\Framework\MockObject\MockObject
      */
     private $mockStore;
 
     protected function setUp(): void
     {
-        $this->mockItem  = m::mock(CacheItem::class);
-        $this->mockStore = m::mock(Store::class);
-        $this->pool      = new IlluminateCachePool($this->mockStore);
+        parent::setUp();
+
+        $this->mockItem = $this
+            ->getMockBuilder(CacheItem::class)
+            ->setConstructorArgs(['my-key-01'])
+            ->getMock();
+
+        $this->mockStore = $this
+            ->getMockBuilder(Store::class)
+            ->getMock();
+
+        $this->pool = new IlluminateCachePool($this->mockStore);
     }
 
-    public function testConstructor()
+    public function testConstructor(): void
     {
-        $this->assertInstanceOf(IlluminateCachePool::class, $this->pool);
-        $this->assertInstanceOf(CacheItemPoolInterface::class, $this->pool);
+        $this->pool = new IlluminateCachePool($this->mockStore);
+        static::assertInstanceOf(IlluminateCachePool::class, $this->pool);
+        static::assertInstanceOf(CacheItemPoolInterface::class, $this->pool);
     }
 }

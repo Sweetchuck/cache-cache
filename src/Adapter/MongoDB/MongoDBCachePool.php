@@ -1,6 +1,9 @@
 <?php
 
-/*
+declare(strict_types = 1);
+
+/**
+ * @file
  * This file is part of php-cache organization.
  *
  * (c) 2015 Aaron Scherer <aequasi@gmail.com>, Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -27,29 +30,16 @@ class MongoDBCachePool extends AbstractCachePool
     use JsonBinaryArmoring;
     use TagSupportWithArray;
 
-    /**
-     * @type Collection
-     */
-    private $collection;
+    private Collection $collection;
 
-    /**
-     * @param Collection $collection
-     */
     public function __construct(Collection $collection)
     {
         $this->collection = $collection;
     }
 
-    /**
-     * @param Manager $manager
-     * @param string  $database
-     * @param string  $collection
-     *
-     * @return Collection
-     */
-    public static function createCollection(Manager $manager, $database, $collection)
+    public static function createCollection(Manager $manager, string $database, string $collectionName): Collection
     {
-        $collection = new Collection($manager, $database, $collection);
+        $collection = new Collection($manager, $database, $collectionName);
         $collection->createIndex(['expireAt' => 1], ['expireAfterSeconds' => 0]);
 
         return $collection;
@@ -58,7 +48,7 @@ class MongoDBCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function fetchObjectFromCache($key)
+    protected function fetchObjectFromCache(string $key): array
     {
         $object = $this->collection->findOne(['_id' => $key]);
 
@@ -66,10 +56,10 @@ class MongoDBCachePool extends AbstractCachePool
             return [false, null, [], null];
         }
 
-        if (isset($object->expiresAt)) {
-            if ($object->expiresAt < time()) {
-                return [false, null, [], null];
-            }
+        if (isset($object->expiresAt)
+            && $object->expiresAt < time()
+        ) {
+            return [false, null, [], null];
         }
 
         return [
@@ -83,7 +73,7 @@ class MongoDBCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function clearAllObjectsFromCache()
+    protected function clearAllObjectsFromCache(): bool
     {
         $this->collection->deleteMany([]);
 
@@ -93,7 +83,7 @@ class MongoDBCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function clearOneObjectFromCache($key)
+    protected function clearOneObjectFromCache(string $key): bool
     {
         $this->collection->deleteOne(['_id' => $key]);
 
@@ -103,7 +93,7 @@ class MongoDBCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    protected function storeItemInCache(PhpCacheItem $item, ?int $ttl): bool
     {
         $object = [
             '_id'                 => $item->getKey(),
@@ -124,11 +114,11 @@ class MongoDBCachePool extends AbstractCachePool
     /**
      * {@inheritdoc}
      */
-    public function getDirectValue($name)
+    public function getDirectValue(string $name): mixed
     {
         $object = $this->collection->findOne(['_id' => $name]);
         if (!$object || !isset($object->data)) {
-            return;
+            return null;
         }
 
         return $this->thawValue($object->data);
@@ -136,8 +126,10 @@ class MongoDBCachePool extends AbstractCachePool
 
     /**
      * {@inheritdoc}
+     *
+     * @return void
      */
-    public function setDirectValue($name, $value)
+    public function setDirectValue(string $name, mixed $value)
     {
         $object = [
             '_id'  => $name,
@@ -147,12 +139,12 @@ class MongoDBCachePool extends AbstractCachePool
         $this->collection->updateOne(['_id' => $name], ['$set' => $object], ['upsert' => true]);
     }
 
-    private function freezeValue($value)
+    private function freezeValue(mixed $value): string
     {
         return static::jsonArmor(serialize($value));
     }
 
-    private function thawValue($value)
+    private function thawValue(string $value): mixed
     {
         return unserialize(static::jsonDeArmor($value));
     }
